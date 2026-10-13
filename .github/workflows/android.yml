@@ -31,10 +31,14 @@ jobs:
           distribution: temurin
           java-version: '21'
 
-      - uses: android-actions/setup-android@v3
-
+      # No android-actions/setup-android here: it runs `sdkmanager tools`, and the
+      # obsolete "tools" package was removed from Google's repository, so sdkmanager
+      # exits 1 and the action fails. GitHub runners already provide the SDK and
+      # cmdline-tools, so only the pinned components need installing.
       - name: Install SDK components
-        run: sdkmanager "platforms;android-36" "build-tools;37.0.0"
+        run: |
+          sdkmanager --install "platforms;android-36" "build-tools;37.0.0"
+          yes | sdkmanager --licenses > /dev/null
 
       - uses: gradle/actions/setup-gradle@v3
 
