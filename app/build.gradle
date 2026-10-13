@@ -1,4 +1,23 @@
+import java.util.Properties
+
 plugins { id 'com.android.application' }
+
+// Release signing is configured outside the repository. Create
+// ~/keystore.properties (git-ignored, see .gitignore) containing:
+//
+//   storeFile=/absolute/path/to/keystore.jks
+//   storePassword=...
+//   keyAlias=...
+//   keyPassword=...
+//
+// Without that file the release build falls back to the debug key, so a fresh
+// clone still builds and CI still works - it just produces a debug-signed APK.
+def keystorePropertiesFile = rootProject.file("keystore.properties")
+def keystoreProperties = new Properties()
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+}
+def hasReleaseKeystore = keystoreProperties.containsKey("storeFile")
 
 android {
     namespace = 'com.fynks.keyboardpicker'
@@ -14,16 +33,28 @@ android {
         // than 36 - the chooser is the whole app, and 36 is not yet verified on
         // Android 16 hardware.
         targetSdk = 35
-        versionCode = 3
+        versionCode = 4
         versionName = "1.0.0"
+    }
+
+    signingConfigs {
+        if (hasReleaseKeystore) {
+            release {
+                storeFile = file(keystoreProperties["storeFile"])
+                storePassword = keystoreProperties["storePassword"]
+                keyAlias = keystoreProperties["keyAlias"]
+                keyPassword = keystoreProperties["keyPassword"]
+            }
+        }
     }
 
     buildTypes {
         release {
-            // Debug key, kept out of the repo (~/.android/debug.keystore). Fine for a
-            // sideloaded utility; a copy signed on another machine will not upgrade
-            // over this one.
-            signingConfig = signingConfigs.debug
+            // Falls back to the debug key when no keystore.properties is present, so
+            // the project always builds. Once a keystore exists this is signed with
+            // it, and successive releases upgrade cleanly over one another - which a
+            // CI-generated debug key cannot do.
+            signingConfig = hasReleaseKeystore ? signingConfigs.release : signingConfigs.debug
         }
     }
 

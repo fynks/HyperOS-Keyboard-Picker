@@ -10,6 +10,9 @@ local.properties
 # Signing material - never commit real keys
 *.jks
 *.keystore
+*.p12
+*.pem
+*.key
 keystore.properties
 
 # IDE

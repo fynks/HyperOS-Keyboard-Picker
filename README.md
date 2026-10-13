@@ -50,9 +50,10 @@ your file manager).
 Tap **Keyboard Picker** on the home screen, pick a keyboard, and the app is
 gone. That is the whole interaction.
 
-> If you already have a build of this app installed that was signed on another
-> machine, the install will fail with `INSTALL_FAILED_UPDATE_INCOMPATIBLE`.
-> Release builds are signed with a local debug key. Remove the old copy first:
+> Releases are signed with a long-lived key and upgrade cleanly over each other.
+> If you have a build installed that was signed with a *different* key (an early
+> debug-signed build, or one from another machine), the install will fail with
+> `INSTALL_FAILED_UPDATE_INCOMPATIBLE`. Remove the old copy first:
 >
 > ```bash
 > adb uninstall com.fynks.keyboardpicker
@@ -98,6 +99,40 @@ Output: `app/build/outputs/apk/release/app-release.apk`
 
 Point Gradle at your SDK with the `ANDROID_HOME` environment variable, or a
 git-ignored `local.properties` containing `sdk.dir=/path/to/sdk`.
+
+### Signing
+
+Release builds use a real signing key if one is configured, and fall back to the
+Android debug key otherwise, so a fresh clone always builds. To sign properly,
+generate a keystore once and keep it — losing it means you can never update an
+already-published build without uninstalling first.
+
+```bash
+keytool -genkeypair -v -keystore ~/keyboard-picker-release.jks \
+  -alias keyboardpicker -keyalg RSA -keysize 4096 -validity 10950
+```
+
+Then create `keystore.properties` next to the project root (git-ignored):
+
+```properties
+storeFile=/home/you/keyboard-picker-release.jks
+storePassword=...
+keyAlias=keyboardpicker
+keyPassword=...
+```
+
+Check which key a build used:
+
+```bash
+apksigner verify --print-certs app/build/outputs/apk/release/app-release.apk
+```
+
+For CI, add these repository secrets — `KEYSTORE_BASE64` (base64 of the `.jks`),
+`KEYSTORE_PASSWORD`, `KEY_ALIAS`, `KEY_PASSWORD`. Tagged releases are then signed
+with the same long-lived key, so they upgrade over each other. Without them CI
+falls back to a per-run debug key and every build has a different signature.
+
+**Never commit the keystore or `keystore.properties`.** Both are git-ignored.
 
 ### Testing
 

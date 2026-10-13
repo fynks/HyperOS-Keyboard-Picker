@@ -47,4 +47,8 @@ First public release.
 ### Security / privacy
 - Zero permissions declared. `showInputMethodPicker()` is public API.
 - `android:allowBackup="false"`; the app stores no data.
-- Release builds are signed with a local debug key held outside the repository.
+- Release signing reads `keystore.properties` (git-ignored) when present and
+  falls back to the debug key otherwise, so a fresh clone always builds. CI
+  reconstructs the keystore from repository secrets, which makes successive tagged
+  releases upgrade cleanly over one another instead of each carrying a distinct
+  ephemeral signature.
