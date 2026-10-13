@@ -139,9 +139,14 @@ jobs:
           name: app-release
           path: dist
 
+      # `gh release create` infers the target repository from the local git
+      # checkout. This job deliberately has none - it only downloads the built
+      # artifact - so gh failed with "fatal: not a git repository". GH_REPO tells
+      # gh where to publish instead, avoiding a full checkout just to name a repo.
       - name: Create release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
         run: |
           gh release create "$GITHUB_REF_NAME" dist/app-release.apk dist/app-release.apk.sha256 \
             --title "$GITHUB_REF_NAME" \
