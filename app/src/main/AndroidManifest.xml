@@ -21,5 +21,21 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+    <!--
+            Optional Quick Settings tile. BIND_QUICK_SETTINGS_TILE is a
+            signature-level system permission: declaring it lets the user add the
+            tile to the shade. It is granted at install time and never appears as a
+            runtime permission prompt.
+        -->
+        <service
+            android:name=".PickerTileService"
+            android:exported="true"
+            android:icon="@drawable/ic_launcher_foreground"
+            android:label="@string/tile_label"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE" />
+            </intent-filter>
+        </service>
     </application>
 </manifest>

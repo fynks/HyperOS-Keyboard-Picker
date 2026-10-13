@@ -17,6 +17,18 @@ imm.showInputMethodPicker();
 
 - Opens Android's native keyboard chooser
 - Closes itself as soon as you dismiss the chooser
+- Adds an optional Quick Settings tile, so the chooser can be opened from the
+  shade without going to the home screen
+
+### Quick Settings tile
+
+Tap once to add the tile: pull down the shade, tap the pencil/edit icon, find
+**Keyboard Picker**, and drag it in. Then tap it to open the chooser.
+
+The tile launches the same activity as the home-screen icon rather than calling
+the input method API from a service. The chooser dialog attaches to the calling
+window, and the activity's delayed request is the path that was measured to
+work, so there is only one copy of that logic.
 
 ## What it does not do
 
@@ -184,13 +196,18 @@ spacebar and drops all six dots.
 
 ## Privacy
 
-The app requests **zero permissions**, declares no network access, contains no
-analytics, and stores no data. `android:allowBackup="false"` keeps it out of
-cloud backup as well. This can be checked against the shipped APK:
+The app declares **no runtime permissions** and requests no network access,
+contains no analytics, and stores no data. `android:allowBackup="false"` keeps it
+out of cloud backup as well. Checkable against the shipped APK:
 
 ```bash
-aapt2 dump permissions app-release.apk
+aapt2 dump permissions app-release.apk   # no uses-permission lines
 ```
+
+The Quick Settings tile is gated by `android.permission.BIND_QUICK_SETTINGS_TILE`
+declared on the service, which is how Android restricts tile binding. That is a
+signature-level system permission granted at install time; it is not a runtime
+permission and never produces a permission prompt.
 
 ## Store listing copy
 

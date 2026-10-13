@@ -2,4 +2,5 @@
 <resources>
     <string name="app_name">Keyboard Picker</string>
     <string name="opening_picker">Opening keyboard picker…</string>
+    <string name="tile_label">Keyboard Picker</string>
 </resources>

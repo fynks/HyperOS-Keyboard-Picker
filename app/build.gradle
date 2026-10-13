@@ -33,7 +33,7 @@ android {
         // than 36 - the chooser is the whole app, and 36 is not yet verified on
         // Android 16 hardware.
         targetSdk = 35
-        versionCode = 4
+        versionCode = 5
         versionName = "1.0.0"
     }
 
