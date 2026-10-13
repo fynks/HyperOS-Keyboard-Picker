@@ -13,6 +13,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   from a service, so the picker lifecycle logic exists in exactly one place.
   Uses `startActivityAndCollapse(PendingIntent)`, since the `Intent` overload is
   deprecated as of API 34.
+- `versionCode` 4 -> 5 for the new feature.
+
+### Verified
+- On Android 15 / HyperOS 2.0: SystemUI binds the tile, tapping it opens the
+  native chooser 6/6, and dismissing leaves 0 activity records behind.
+
+### Docs
+- Store listing copy and privacy wording updated for the tile. The previous
+  "zero permissions" phrasing was imprecise: the app declares no
+  `<uses-permission>` entries, but the tile is gated by a system permission on
+  the service.
 
 ## [1.0.0] - 2026-10-13
 

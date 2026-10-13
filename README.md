@@ -226,10 +226,14 @@ Tap the icon and Android's own "Choose input method" dialog opens — the exact
 same dialog as the keyboard-switch button in your navigation bar. Pick a
 keyboard, and Keyboard Picker gets out of the way.
 
+Prefer the shade? Add the Quick Settings tile and the chooser opens without
+leaving it.
+
 That's the whole app.
 
 WHAT IT DOES
-• Opens the real system keyboard chooser
+• Opens the real system keyboard chooser, from the home screen icon or a
+  Quick Settings tile
 • Nothing else
 
 WHAT IT DOES NOT DO
@@ -240,8 +244,11 @@ WHAT IT DOES NOT DO
   collect anything about you
 
 PRIVACY
-Keyboard Picker requests zero permissions. It has no analytics, no ads and no
-network access, and it stores no data at all.
+Keyboard Picker declares no runtime permissions and requests no access to
+anything. It has no analytics, no ads and no network access, and it stores no
+data at all. The optional Quick Settings tile is protected by a system
+permission granted at install time, so the app never shows a permission
+prompt.
 
 HOW IT WORKS
 Technically interesting, if you like this sort of thing: the chooser dialog is
