@@ -24,9 +24,9 @@ jobs:
       KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: '21'
@@ -42,7 +42,16 @@ jobs:
           yes | "$SDKMANAGER" --licenses > /dev/null || true
           "$SDKMANAGER" --install "platforms;android-36" "build-tools;37.0.0"
 
-      - uses: gradle/actions/setup-gradle@v3
+      - uses: gradle/actions/setup-gradle@v6
+
+      # setup-gradle already caches ~/.gradle. The Android SDK is separate and is
+      # the larger download, so cache it too: keyed on the pinned component names
+      # so a version bump in this file correctly invalidates it.
+      - name: Cache Android SDK
+        uses: actions/cache@v6
+        with:
+          path: ${{ env.ANDROID_SDK_ROOT || '/usr/local/lib/android/sdk' }}
+          key: android-sdk-${{ runner.os }}-api36-bt37-${{ hashFiles('.github/workflows/android.yml') }}
 
       - name: Report signing configuration
         run: |
@@ -89,7 +98,7 @@ jobs:
           cd app/build/outputs/apk/release
           sha256sum app-release.apk | tee app-release.apk.sha256
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: app-release
           path: app/build/outputs/apk/release/app-release.apk*
@@ -117,7 +126,7 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: app-release
           path: dist
