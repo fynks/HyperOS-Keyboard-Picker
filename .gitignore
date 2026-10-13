@@ -1,0 +1,23 @@
+# Byte-compiled / cache
+*.class
+.gradle/
+build/
+.cxx/
+
+# Local SDK location - machine specific, must never be committed
+local.properties
+
+# Signing material - never commit real keys
+*.jks
+*.keystore
+keystore.properties
+
+# IDE
+.idea/
+*.iml
+.DS_Store
+
+# Build artefacts are published as GitHub Releases, not committed
+*.apk
+*.aab
+dist/

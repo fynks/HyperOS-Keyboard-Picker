@@ -1,0 +1,43 @@
+plugins { id 'com.android.application' }
+
+android {
+    namespace 'com.fynks.keyboardpicker'
+    compileSdk 35
+
+    defaultConfig {
+        applicationId "com.fynks.keyboardpicker"
+        minSdk 21
+        // Deliberately 34, not 35: Android 15's stricter background-activity-launch
+        // rules can suppress a system dialog launched from a cold-start launcher
+        // activity. Raise this only after re-testing that behaviour.
+        targetSdk 34
+        versionCode 3
+        versionName "1.0.0"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            // Debug key: this is a personal utility, not a Play Store app. The
+            // fingerprint is stable per machine, so re-signing elsewhere means the
+            // old install must be removed first.
+            signingConfig signingConfigs.debug
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    lint {
+        // Fail the build on anything that would affect the published APK.
+        abortOnError true
+        warningsAsErrors false
+        disable 'GradleDependency', 'OldTargetApi'
+    }
+
+    packaging {
+        resources.excludes += ['META-INF/*.kotlin_module', 'kotlin/**']
+    }
+}

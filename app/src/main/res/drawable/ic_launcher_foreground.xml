@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Adaptive-icon foreground. Glyph lives inside the 72dp safe zone (21..87) so
+  launcher masks of any shape never clip it.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <group
+        android:scaleX="0.15"
+        android:scaleY="0.15"
+        android:translateX="15.6"
+        android:translateY="12.5">
+
+        <group
+            android:strokeColor="#FF63B3FF"
+            android:strokeWidth="26"
+            android:strokeLineCap="round">
+            <path android:pathData="M176,150 H336" />
+            <path android:pathData="M336,150 l-40,-34 M336,150 l-40,34" />
+            <path android:pathData="M336,236 H176" />
+            <path android:pathData="M176,236 l40,-34 M176,236 l40,34" />
+        </group>
+
+        <path
+            android:pathData="M138,300 H374 A26,26 0 0 1 400,326 V424 A26,26 0 0 1 374,450 H138 A26,26 0 0 1 112,424 V326 A26,26 0 0 1 138,300 Z"
+            android:strokeColor="#FFFFFFFF"
+            android:strokeWidth="20" />
+
+        <group android:fillColor="#FFFFFFFF">
+            <path android:pathData="M148,330 H172 A8,8 0 0 1 180,338 V352 A8,8 0 0 1 172,360 H148 A8,8 0 0 1 140,352 V338 A8,8 0 0 1 148,330 Z" />
+            <path android:pathData="M204,330 H228 A8,8 0 0 1 236,338 V352 A8,8 0 0 1 228,360 H204 A8,8 0 0 1 196,352 V338 A8,8 0 0 1 204,330 Z" />
+            <path android:pathData="M260,330 H284 A8,8 0 0 1 292,338 V352 A8,8 0 0 1 284,360 H260 A8,8 0 0 1 252,352 V338 A8,8 0 0 1 260,330 Z" />
+            <path android:pathData="M316,330 H340 A8,8 0 0 1 348,338 V352 A8,8 0 0 1 340,360 H316 A8,8 0 0 1 308,352 V338 A8,8 0 0 1 316,330 Z" />
+            <path android:pathData="M148,378 H172 A8,8 0 0 1 180,386 V400 A8,8 0 0 1 172,408 H148 A8,8 0 0 1 140,400 V386 A8,8 0 0 1 148,378 Z" />
+            <path android:pathData="M204,378 H228 A8,8 0 0 1 236,386 V400 A8,8 0 0 1 228,408 H204 A8,8 0 0 1 196,400 V386 A8,8 0 0 1 204,378 Z" />
+            <path android:pathData="M260,378 H284 A8,8 0 0 1 292,386 V400 A8,8 0 0 1 284,408 H260 A8,8 0 0 1 252,400 V386 A8,8 0 0 1 260,378 Z" />
+            <path android:pathData="M316,378 H340 A8,8 0 0 1 348,386 V400 A8,8 0 0 1 340,408 H316 A8,8 0 0 1 308,400 V386 A8,8 0 0 1 316,378 Z" />
+            <path android:pathData="M172,422 H340 A6,6 0 0 1 346,428 A6,6 0 0 1 340,434 H172 A6,6 0 0 1 166,428 A6,6 0 0 1 172,422 Z" />
+        </group>
+    </group>
+</vector>
