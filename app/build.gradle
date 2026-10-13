@@ -1,20 +1,21 @@
 plugins { id 'com.android.application' }
 
 android {
-    namespace 'com.fynks.keyboardpicker'
-    compileSdk 35
+    namespace = 'com.fynks.keyboardpicker'
+    compileSdk = 36
 
     defaultConfig {
-        applicationId "com.fynks.keyboardpicker"
-        // Android 14+: HyperOS 1 shipped on 14, HyperOS 2 on 15.
-        minSdk 34
+        applicationId = "com.fynks.keyboardpicker"
+        minSdk = 34
         // Android 15 tightened background-activity-launch rules, which looked like a
         // risk to a dialog requested from a cold-start launcher activity. Measured on
         // Android 15 / HyperOS 2.0 that risk does not materialise: 18/18 launches
-        // opened the chooser at 35, identical to 34. Kept at 35 to match compileSdk.
-        targetSdk 35
-        versionCode 3
-        versionName "1.0.0"
+        // opened the chooser at 35, identical to 34. Held at 35 deliberately rather
+        // than 36 - the chooser is the whole app, and 36 is not yet verified on
+        // Android 16 hardware.
+        targetSdk = 35
+        versionCode = 3
+        versionName = "1.0.0"
     }
 
     buildTypes {
@@ -22,16 +23,16 @@ android {
             // Debug key, kept out of the repo (~/.android/debug.keystore). Fine for a
             // sideloaded utility; a copy signed on another machine will not upgrade
             // over this one.
-            signingConfig signingConfigs.debug
+            signingConfig = signingConfigs.debug
         }
     }
 
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_17
-        targetCompatibility JavaVersion.VERSION_17
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
 
     lint {
-        abortOnError true
+        abortOnError = true
     }
 }

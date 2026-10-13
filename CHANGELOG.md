@@ -23,9 +23,19 @@ First public release.
 - `scripts/smoke-test.sh`, which launches the app and asserts which window holds
   focus.
 
+### Toolchain
+- AGP 8.5.2 -> 9.4.1, Gradle 8.7 -> 9.8.1, `compileSdk` 35 -> 36,
+  `build-tools` 35.0.0 -> 37.0.0. Builds on JDK 17 through 27.
+- AGP 9 adds a default `kotlin-stdlib` dependency. The app is pure Java with no
+  dependencies, so this bundled ~2 MB of unused Kotlin runtime and inflated the
+  APK from 14 KB to 2 MB. Disabled via `kotlin.stdlib.default.dependency=false`
+  in `gradle.properties`.
+
 ### Compatibility
-- `minSdk 34`, `targetSdk 35`, `compileSdk 35`.
-- `targetSdk 35` verified on Android 15 / HyperOS 2.0: chooser opened on 18/18
+- `minSdk 34`, `targetSdk 35`, `compileSdk 36`. `targetSdk` is held at 35 rather
+  than 36: the chooser is the entire app and 36 is not yet verified on Android 16
+  hardware.
+- Verified on Android 15 / HyperOS 2.0: chooser opened on 18/18
   launches, and 8/8 at `targetSdk 34`. The concern that Android 15's
   background-activity-launch rules would suppress the dialog did not
   materialise.

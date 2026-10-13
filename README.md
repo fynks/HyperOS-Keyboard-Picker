@@ -84,8 +84,8 @@ that signal: focus is lost when the chooser opens and returned when it closes.
 
 ## Build
 
-Requires JDK 17 and the Android SDK with `platforms;android-35` and
-`build-tools;35.0.0`.
+Requires JDK 17 or newer (verified on 17 and 27) and the Android SDK with
+`platforms;android-36` and `build-tools;37.0.0`.
 
 ```bash
 export ANDROID_HOME="$HOME/android-sdk"
