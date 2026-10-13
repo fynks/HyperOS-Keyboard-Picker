@@ -44,13 +44,21 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@v6
 
-      # setup-gradle already caches ~/.gradle. The Android SDK is separate and is
-      # the larger download, so cache it too: keyed on the pinned component names
-      # so a version bump in this file correctly invalidates it.
-      - name: Cache Android SDK
+      # Cache ONLY the two components this project installs, not the SDK root. The
+      # root also holds emulator and system images (10+ GB), so caching it made the
+      # post-job upload the slowest step in the build. setup-gradle already caches
+      # ~/.gradle, and the runner image preinstalls most of the SDK, so this only
+      # needs to cover what sdkmanager fetches.
+      #
+      # fail-on-cache-miss: a cache problem must never fail the build; this step is
+      # purely an optimisation and sdkmanager can always re-download.
+      - name: Cache Android SDK components
         uses: actions/cache@v6
+        continue-on-error: true
         with:
-          path: ${{ env.ANDROID_SDK_ROOT || '/usr/local/lib/android/sdk' }}
+          path: |
+            ${{ env.ANDROID_SDK_ROOT || '/usr/local/lib/android/sdk' }}/platforms/android-36
+            ${{ env.ANDROID_SDK_ROOT || '/usr/local/lib/android/sdk' }}/build-tools/37.0.0
           key: android-sdk-${{ runner.os }}-api36-bt37-${{ hashFiles('.github/workflows/android.yml') }}
 
       - name: Report signing configuration
