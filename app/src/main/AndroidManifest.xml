@@ -1,31 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <!--
-        No permissions are requested, and none are needed:
-        InputMethodManager#showInputMethodPicker() is a public API available to
-        every app. There is deliberately no SYSTEM_ALERT_WINDOW / overlay use.
-    -->
+    <!-- No permissions: showInputMethodPicker() is public API. -->
 
     <application
         android:allowBackup="false"
-        android:dataExtractionRules="@xml/data_extraction_rules"
-        android:fullBackupContent="false"
         android:icon="@mipmap/ic_launcher"
-        android:roundIcon="@mipmap/ic_launcher_round"
         android:label="@string/app_name"
-        android:supportsRtl="true"
+        android:roundIcon="@mipmap/ic_launcher_round"
         android:theme="@android:style/Theme.Translucent.NoTitleBar">
 
-        <!--
-            No android:noHistory and no android:finishOnTaskLaunch: either one
-            destroys the window before the system picker can be dismissed.
-        -->
+        <!-- noHistory/finishOnTaskLaunch would destroy the window mid-selection. -->
         <activity
             android:name=".MainActivity"
+            android:excludeFromRecents="true"
             android:exported="true"
-            android:launchMode="singleTop"
-            android:excludeFromRecents="true">
+            android:launchMode="singleTop">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />

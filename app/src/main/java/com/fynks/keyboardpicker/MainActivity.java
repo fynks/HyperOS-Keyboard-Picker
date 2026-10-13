@@ -4,31 +4,38 @@ import android.app.Activity;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
-import android.util.Log;
 import android.view.inputmethod.InputMethodManager;
 
 /**
- * Opens the real system keyboard chooser via InputMethodManager#showInputMethodPicker().
+ * Opens Android's own keyboard chooser via
+ * {@link InputMethodManager#showInputMethodPicker()} and gets out of the way.
  *
- * The recipe (delay + real focused host window) was reverse-engineered from Tasker's
- * working "Input Method Select" action (GenericActionActivityShowKeyboardSelector),
- * which sleeps 500ms and then calls showInputMethodPicker() from a dedicated,
- * fully visible Activity. A translucent, content-less host window is NOT enough on
- * HyperOS - the request is silently dropped.
+ * <p>The chooser is a system dialog attached to this activity's window, so the
+ * activity has to stay alive while that dialog is up, and the window itself has
+ * to be a real, opaque, focused one or the request is dropped silently.
+ *
+ * <p>The timing below is not decorative. Requesting the chooser as soon as the
+ * activity is created, or from the first focus callback, was measured to fail on
+ * Android 15 / HyperOS: the window has not been registered with the window
+ * manager yet, so the dialog has nothing to attach to. A delayed first request
+ * plus one retry is what reliably opens it. Focus changes, in turn, are the
+ * reliable signal for when the chooser actually opened and closed.
  */
 public class MainActivity extends Activity {
-    private static final String TAG = "KeyboardPicker";
 
-    private static final int WAITING = 0;      // picker requested, not yet seen
-    private static final int PICKER_SHOWN = 1; // focus lost -> picker is up
-    private static final int CLOSED = 2;       // focus returned -> picker dismissed
+    /** Delay before the first request, once the window has settled. */
+    private static final long FIRST_REQUEST_AFTER_MS = 500L;
+    /** The first request is not always enough; ask once more. */
+    private static final long RETRY_REQUEST_AFTER_MS = 1_500L;
+    /** If the chooser never opened, close instead of stranding an idle window. */
+    private static final long GIVE_UP_AFTER_MS = 10_000L;
 
-    /** Matches Tasker's working implementation. */
-    private static final long PICKER_DELAY_MS = 500L;
-    private static final long RETRY_AFTER_MS = 1500L;
-    private static final long WATCHDOG_MS = 10000L;
+    private static final int WAITING = 0;
+    private static final int SHOWN = 1;
+    private static final int CLOSED = 2;
 
     private final Handler ui = new Handler(Looper.getMainLooper());
+
     private InputMethodManager imm;
     private int state = WAITING;
     private boolean retried;
@@ -36,63 +43,53 @@ public class MainActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        // A real, opaque, focused content view: the system attaches the picker dialog to
-        // this window, so an empty/translucent window gets ignored.
+        // An opaque view: a translucent or content-less window gets ignored.
         setContentView(R.layout.activity_main);
 
         imm = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
         if (imm == null) {
-            Log.w(TAG, "InputMethodManager unavailable, finishing");
             finish();
             return;
         }
-        Log.i(TAG, "onCreate, posting picker in " + PICKER_DELAY_MS + "ms");
-        ui.postDelayed(this::requestPicker, PICKER_DELAY_MS);
+        ui.postDelayed(this::requestChooser, FIRST_REQUEST_AFTER_MS);
     }
 
-    private void requestPicker() {
-        if (isFinishing() || isDestroyed()) return;
-        Log.i(TAG, "showInputMethodPicker() state=" + state);
-        imm.showInputMethodPicker(); // stays WAITING until focus is lost
-        ui.postDelayed(this::maybeRetry, RETRY_AFTER_MS);
-        ui.postDelayed(this::watchdog, WATCHDOG_MS);
+    private void requestChooser() {
+        if (isFinishing() || isDestroyed()) {
+            return;
+        }
+        imm.showInputMethodPicker();
+        ui.postDelayed(this::retryChooser, RETRY_REQUEST_AFTER_MS);
+        ui.postDelayed(this::giveUp, GIVE_UP_AFTER_MS);
     }
 
-    /** If focus was never lost, the first call was dropped. Try exactly once more. */
-    private void maybeRetry() {
-        if (state != WAITING || retried) return;
+    private void retryChooser() {
+        if (retried || state != WAITING) {
+            return;
+        }
         retried = true;
-        Log.i(TAG, "no focus change yet, retrying showInputMethodPicker()");
         imm.showInputMethodPicker();
     }
 
-    /** Never leave an invisible activity hanging around. */
-    private void watchdog() {
-        if (state != WAITING) return;
-        Log.w(TAG, "picker never took focus after " + WATCHDOG_MS + "ms, giving up");
-        finish();
+    private void giveUp() {
+        if (state == WAITING) {
+            finish();
+        }
     }
 
     @Override
     public void onWindowFocusChanged(boolean hasFocus) {
         super.onWindowFocusChanged(hasFocus);
-        if (!hasFocus && state == WAITING) {
-            // Picker took focus - the user can now choose.
-            Log.i(TAG, "focus lost -> picker shown");
-            state = PICKER_SHOWN;
-            ui.removeCallbacks(this::watchdog);
-        } else if (hasFocus && state == PICKER_SHOWN) {
-            // Picker dismissed - now it is safe to tear down.
-            Log.i(TAG, "focus returned -> picker dismissed, finishing");
+        if (state == WAITING && !hasFocus) {
+            state = SHOWN;
+        } else if (state == SHOWN && hasFocus) {
             state = CLOSED;
-            ui.removeCallbacks(this::maybeRetry);
             finish();
         }
     }
 
     @Override
     protected void onDestroy() {
-        Log.i(TAG, "onDestroy state=" + state);
         ui.removeCallbacksAndMessages(null);
         super.onDestroy();
     }
