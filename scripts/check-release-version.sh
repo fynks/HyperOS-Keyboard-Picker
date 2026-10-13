@@ -20,7 +20,20 @@ cd "$(dirname "$0")/.."
 
 GRADLE_FILE="app/build.gradle"
 APK="${APK:-}"
-TAG="${1:-${GITHUB_REF_NAME:-}}"
+
+# Note: ${1-} not ${1:-}. A caller that deliberately passes an empty string (CI
+# does, for branch builds) must not fall back to GITHUB_REF_NAME, which on a
+# branch push is the branch name and is not a version tag.
+if [ "$#" -ge 1 ]; then
+    TAG="$1"
+elif [ -n "${GITHUB_REF:-}" ]; then
+    case "$GITHUB_REF" in
+        refs/tags/v*) TAG="${GITHUB_REF#refs/tags/}" ;;
+        *) TAG="" ;;
+    esac
+else
+    TAG=""
+fi
 
 fail() {
     echo "::error::Version validation failed: $1"
