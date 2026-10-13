@@ -18,17 +18,21 @@ First public release.
 - Delayed first request with a single retry, plus a 10 s give-up timer so a
   refused request cannot strand an idle window. See README for the measurements
   behind this - requesting the chooser without the delay failed on every attempt.
-- Adaptive launcher icon (API 26+) with a themed monochrome layer, plus legacy
-  bitmap mipmaps and round variants for API 21-25.
+- Adaptive launcher icon using the `keyboard` glyph from Tabler Icons (MIT), with
+  a themed monochrome layer.
 - `scripts/smoke-test.sh`, which launches the app and asserts which window holds
   focus.
 
 ### Compatibility
-- `minSdk 21`, `targetSdk 35`, `compileSdk 35`.
-- Verified on Android 15 / HyperOS 2.0: chooser opened on 18/18 launches at
-  `targetSdk 35`, and 8/8 at `targetSdk 34`. The concern that Android 15's
+- `minSdk 34`, `targetSdk 35`, `compileSdk 35`.
+- `targetSdk 35` verified on Android 15 / HyperOS 2.0: chooser opened on 18/18
+  launches, and 8/8 at `targetSdk 34`. The concern that Android 15's
   background-activity-launch rules would suppress the dialog did not
-  materialise, so `targetSdk` matches `compileSdk`.
+  materialise.
+- `minSdk` raised from 21 to 34 (Android 14, which is what HyperOS 1 shipped on).
+  This makes every supported device newer than API 26, so the five densities of
+  legacy bitmap mipmaps became unreachable and were deleted; the APK dropped
+  from ~69 KB to ~14 KB.
 
 ### Security / privacy
 - Zero permissions declared. `showInputMethodPicker()` is public API.

@@ -28,7 +28,7 @@ imm.showInputMethodPicker();
 
 ## Requirements
 
-- Android 5.0 (API 21) or newer
+- Android 14 (API 34) or newer
 - At least two keyboards enabled, otherwise the chooser may list a single
   entry: *Settings → Additional settings → Languages & input → Keyboard
   management*
@@ -123,10 +123,21 @@ app/src/main/
 └── res/
     ├── drawable/       # adaptive icon layers
     ├── layout/         # the opaque window the chooser attaches to
-    ├── mipmap-*/       # launcher icons, incl. legacy densities and round
+    ├── mipmap-anydpi/  # adaptive icon (the only icon form needed at minSdk 34)
     └── values/strings.xml
 scripts/smoke-test.sh
 ```
+
+The icon is the `keyboard` glyph from [Tabler Icons](https://tabler.io/icons)
+(MIT) — the only vector artwork in the project, and the source of
+`docs/icon-512.png`, a raster preview for READMEs and store listings. Because
+`minSdk` is 34, every device is past API 26, so no legacy density mipmaps are
+shipped.
+
+The glyph's key dots had to be encoded as absolute arcs with `fillColor` on each
+path. Written as relative arcs inside a group with an inherited `fillColor` — the
+obvious translation — VectorDrawable silently renders the keyboard outline and
+spacebar and drops all six dots.
 
 ## Things to know before changing this
 
@@ -188,7 +199,7 @@ window to settle, and keeps the activity alive until the dialog closes — which
 is why it doesn't vanish the moment you tap it.
 
 REQUIREMENTS
-Android 5.0 or newer. Have at least two keyboards enabled (Settings →
+Android 14 or newer. Have at least two keyboards enabled (Settings →
 Additional settings → Languages & input → Keyboard management) or the chooser
 may only list one.
 
@@ -197,5 +208,10 @@ Open source, MIT licensed.
 
 ## License
 
-MIT — see [LICENSE](LICENSE). The screenshot in `docs/` is a screenshot of the
-app running on a test device and is covered by the same licence.
+MIT — see [LICENSE](LICENSE).
+
+Third-party assets:
+
+- The launcher icon glyph is `keyboard` from [Tabler Icons](https://tabler.io/icons),
+  © Paweł Kuna, MIT licensed. The screenshot in `docs/` is a capture of the app
+  running on a test device.

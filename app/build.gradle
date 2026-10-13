@@ -6,7 +6,8 @@ android {
 
     defaultConfig {
         applicationId "com.fynks.keyboardpicker"
-        minSdk 21
+        // Android 14+: HyperOS 1 shipped on 14, HyperOS 2 on 15.
+        minSdk 34
         // Android 15 tightened background-activity-launch rules, which looked like a
         // risk to a dialog requested from a cold-start launcher activity. Measured on
         // Android 15 / HyperOS 2.0 that risk does not materialise: 18/18 launches
@@ -18,7 +19,6 @@ android {
 
     buildTypes {
         release {
-            minifyEnabled false
             // Debug key, kept out of the repo (~/.android/debug.keystore). Fine for a
             // sideloaded utility; a copy signed on another machine will not upgrade
             // over this one.
