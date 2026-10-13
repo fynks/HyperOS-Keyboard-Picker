@@ -31,14 +31,16 @@ jobs:
           distribution: temurin
           java-version: '21'
 
-      # No android-actions/setup-android here: it runs `sdkmanager tools`, and the
-      # obsolete "tools" package was removed from Google's repository, so sdkmanager
-      # exits 1 and the action fails. GitHub runners already provide the SDK and
-      # cmdline-tools, so only the pinned components need installing.
+      # The SDK ships with the runner image but sdkmanager is not on PATH, so locate it
+      # rather than depending on either setup-android (which fails on `sdkmanager
+      # tools`, an obsolete package) or a hardcoded image path.
       - name: Install SDK components
         run: |
-          sdkmanager --install "platforms;android-36" "build-tools;37.0.0"
-          yes | sdkmanager --licenses > /dev/null
+          SDKMANAGER=$(find "${ANDROID_SDK_ROOT:-$ANDROID_HOME}" -type f -name sdkmanager -path '*bin*' | head -1)
+          if [ -z "$SDKMANAGER" ]; then echo "::error::sdkmanager not found under the SDK root"; exit 1; fi
+          echo "Using $SDKMANAGER"
+          yes | "$SDKMANAGER" --licenses > /dev/null || true
+          "$SDKMANAGER" --install "platforms;android-36" "build-tools;37.0.0"
 
       - uses: gradle/actions/setup-gradle@v3
 
@@ -82,7 +84,7 @@ jobs:
 
       - name: Verify signature and checksum
         run: |
-          APKSIGNER="$ANDROID_HOME/build-tools/37.0.0/apksigner"
+          APKSIGNER=$(find "${ANDROID_SDK_ROOT:-$ANDROID_HOME}"/build-tools -type f -name apksigner | sort -V | tail -1)
           "$APKSIGNER" verify --print-certs app/build/outputs/apk/release/app-release.apk
           cd app/build/outputs/apk/release
           sha256sum app-release.apk | tee app-release.apk.sha256
@@ -99,7 +101,8 @@ jobs:
             echo "### Signing certificate"
             echo
             echo '```'
-            "$ANDROID_HOME/build-tools/37.0.0/apksigner" verify --print-certs \
+            $(find "${ANDROID_SDK_ROOT:-$ANDROID_HOME}"/build-tools -type f -name apksigner | sort -V | tail -1) \
+              verify --print-certs \
               app/build/outputs/apk/release/app-release.apk \
               | grep -E "certificate DN|certificate SHA-256 digest"
             echo '```'
