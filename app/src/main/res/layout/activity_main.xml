@@ -2,7 +2,7 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#FF101418">
+    android:background="@color/window_background">
 
     <TextView
         android:layout_width="wrap_content"
@@ -11,6 +11,6 @@
         android:gravity="center"
         android:padding="24dp"
         android:text="@string/opening_picker"
-        android:textColor="#FFE6EAF2"
+        android:textColor="@color/status_text"
         android:textSize="16sp" />
 </FrameLayout>

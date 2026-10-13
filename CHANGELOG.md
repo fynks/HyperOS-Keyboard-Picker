@@ -7,6 +7,50 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- `versionName` corrected from `1.0.0` to `1.1.0`. The published `v1.1.0` APK
+  disagreed with its own tag, because `versionName` was left behind when the tile
+  bumped `versionCode` to 5. `versionCode` was correct, so upgrades were never
+  affected; only the reported version string was wrong. Not repackaged or
+  re-tagged, since rewriting a published tag would break the checksums people have
+  already downloaded.
+- `MainActivity`: a focus loss arriving *before* the chooser was ever requested
+  (notification shade, a system dialog, the screen turning off) was treated as
+  proof the chooser had opened, which could finish the activity before it ever
+  appeared. `IDLE` and `PENDING` are now distinct states, and only focus loss
+  after an actual request counts as evidence.
+- `MainActivity`: the retry and give-up callbacks are now held as fields. A method
+  reference creates a new instance on each evaluation, so
+  `removeCallbacks(this::retryChooser)` could never match the posted runnable and
+  was silently a no-op.
+- Layout colours moved from hardcoded literals to `res/values/colors.xml`.
+
+### Added
+- `scripts/check-release-version.sh`, wired into CI. It fails a tagged build when
+  the tag and Gradle `versionName` disagree, and cross-checks the built APK's own
+  version metadata. Branch and pull-request builds skip the tag comparison.
+- CI restores the SDK component cache *before* installing components, so the
+  cache is actually used rather than only written.
+- Release notes generated from the verified APK: "What's changed", install and
+  upgrade instructions, `sha256sum -c` verification for Linux and macOS, and the
+  signing certificate's SHA-256 fingerprint, read from the artifact rather than
+  hardcoded.
+
+### Changed
+- `scripts/smoke-test.sh` now implements its documented input fallback correctly
+  (plain `adb shell input` first, `su` only if that is denied) and detects the
+  chooser without depending on its English title: it asserts that our activity is
+  still the focused app while a window other than ours holds focus. Exit status
+  is non-zero on failure, and missing adb, no device, and invalid repeat counts
+  are reported distinctly.
+
+### Documentation
+- README: project tree corrected to include `PickerTileService`, an
+  Android 14 / 15 / 16+ compatibility table marking unverified configurations,
+  a troubleshooting section, and smoke-test prerequisites and limitations.
+
+## [1.1.0] - 2026-10-13
+
 ### Added
 - Optional Quick Settings tile (`PickerTileService`) that opens the chooser from
   the shade. It launches `MainActivity` rather than calling the input method API

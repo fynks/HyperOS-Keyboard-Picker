@@ -13,6 +13,9 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+    outputs:
+      cert_sha256: ${{ steps.apk-meta.outputs.cert_sha256 }}
+      signer_dn: ${{ steps.apk-meta.outputs.signer_dn }}
 
     # Job-level, not step-level: a step's own `if` is evaluated before that
     # step's `env` exists, so `if: env.KEYSTORE_BASE64 != ''` on a step that
@@ -31,35 +34,45 @@ jobs:
           distribution: temurin
           java-version: '21'
 
-      # The SDK ships with the runner image but sdkmanager is not on PATH, so locate it
-      # rather than depending on either setup-android (which fails on `sdkmanager
-      # tools`, an obsolete package) or a hardcoded image path.
-      - name: Install SDK components
-        run: |
-          SDKMANAGER=$(find "${ANDROID_SDK_ROOT:-$ANDROID_HOME}" -type f -name sdkmanager -path '*bin*' | head -1)
-          if [ -z "$SDKMANAGER" ]; then echo "::error::sdkmanager not found under the SDK root"; exit 1; fi
-          echo "Using $SDKMANAGER"
-          yes | "$SDKMANAGER" --licenses > /dev/null || true
-          "$SDKMANAGER" --install "platforms;android-36" "build-tools;37.0.0"
-
       - uses: gradle/actions/setup-gradle@v6
 
-      # Cache ONLY the two components this project installs, not the SDK root. The
-      # root also holds emulator and system images (10+ GB), so caching it made the
-      # post-job upload the slowest step in the build. setup-gradle already caches
-      # ~/.gradle, and the runner image preinstalls most of the SDK, so this only
-      # needs to cover what sdkmanager fetches.
+      # Restore the cache BEFORE installing SDK components, otherwise the install
+      # always pays the full download and the cache is only ever written.
       #
-      # fail-on-cache-miss: a cache problem must never fail the build; this step is
-      # purely an optimisation and sdkmanager can always re-download.
-      - name: Cache Android SDK components
+      # Only the two components this project uses are cached, not the SDK root:
+      # the root also holds emulator and system images (10+ GB), which made the
+      # post-job upload the slowest step in the build.
+      #
+      # continue-on-error: a cache miss or a cache-service outage must never fail
+      # the build. This is purely an optimisation; sdkmanager re-downloads below.
+      - name: Restore cached SDK components
         uses: actions/cache@v6
         continue-on-error: true
+        id: sdk-cache
         with:
           path: |
             ${{ env.ANDROID_SDK_ROOT || '/usr/local/lib/android/sdk' }}/platforms/android-36
             ${{ env.ANDROID_SDK_ROOT || '/usr/local/lib/android/sdk' }}/build-tools/37.0.0
-          key: android-sdk-${{ runner.os }}-api36-bt37-${{ hashFiles('.github/workflows/android.yml') }}
+          key: android-sdk-${{ runner.os }}-api36-bt37-${{ hashFiles('app/build.gradle') }}
+
+      # The SDK ships with the runner image but sdkmanager is not on PATH, so locate
+      # it rather than depending on setup-android (which fails on `sdkmanager
+      # tools`, an obsolete package) or a hardcoded image path. This installs only
+      # what the cache did not supply, and succeeds either way.
+      - name: Install SDK components
+        run: |
+          SDKMANAGER=$(find "${ANDROID_SDK_ROOT:-$ANDROID_HOME}" -type f -name sdkmanager -path '*bin*' | head -1)
+          if [ -z "$SDKMANAGER" ]; then echo "::error::sdkmanager not found under the SDK root"; exit 1; fi
+          echo "sdkmanager: $SDKMANAGER"
+          echo "cache hit  : ${{ steps.sdk-cache.outputs.cache-hit }}"
+          yes | "$SDKMANAGER" --licenses > /dev/null || true
+          "$SDKMANAGER" --install "platforms;android-36" "build-tools;37.0.0"
+
+      # Guards against a tag that disagrees with the Gradle version, and against an
+      # APK whose own metadata drifted from the build files. On branches and pull
+      # requests the tag comparison is skipped, so development builds are unaffected.
+      - name: Validate release version
+        run: scripts/check-release-version.sh "${{ startsWith(github.ref, 'refs/tags/v') && github.ref_name || '' }}"
 
       - name: Report signing configuration
         run: |
@@ -106,6 +119,23 @@ jobs:
           cd app/build/outputs/apk/release
           sha256sum app-release.apk | tee app-release.apk.sha256
 
+      # Re-runs the version check, this time against the real APK, so the built
+      # artifact is proven to carry the version the tag claims.
+      - name: Validate built APK metadata
+        id: apk-meta
+        run: |
+          APKSIGNER=$(find "${ANDROID_SDK_ROOT:-$ANDROID_HOME}"/build-tools -type f -name apksigner | sort -V | tail -1)
+          CERT_SHA256=$("$APKSIGNER" verify --print-certs app/build/outputs/apk/release/app-release.apk \
+            | sed -nE 's/.*certificate SHA-256 digest: ([0-9a-f]+).*/\1/p' | head -1)
+          [ -n "$CERT_SHA256" ] || { echo "::error::could not read signing certificate"; exit 1; }
+          SIGNER_DN=$("$APKSIGNER" verify --print-certs app/build/outputs/apk/release/app-release.apk \
+            | sed -nE 's/.*certificate DN: (.*)/\1/p' | head -1)
+          # Job outputs, so the release job can quote the real certificate.
+          echo "cert_sha256=$CERT_SHA256" >> "$GITHUB_OUTPUT"
+          echo "signer_dn=$SIGNER_DN" >> "$GITHUB_OUTPUT"
+          APK=app/build/outputs/apk/release/app-release.apk \
+            scripts/check-release-version.sh "${{ startsWith(github.ref, 'refs/tags/v') && github.ref_name || '' }}"
+
       - uses: actions/upload-artifact@v7
         with:
           name: app-release
@@ -147,27 +177,61 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_REPO: ${{ github.repository }}
+          CERT_SHA256: ${{ needs.build.outputs.cert_sha256 }}
+          SIGNER_DN: ${{ needs.build.outputs.signer_dn }}
         run: |
+          NOTES=$(mktemp)
+          {
+            echo "### What's changed"
+            echo
+            echo "Full details: [CHANGELOG.md](https://github.com/${{ github.repository }}/blob/main/CHANGELOG.md)."
+            echo "The commit list for this tag is below."
+            echo
+            echo "### Requirements"
+            echo
+            echo "- Android 14 (API 34) or newer"
+            echo "- Two or more keyboards enabled, or the chooser will list only one"
+            echo
+            echo "### Install or upgrade"
+            echo
+            echo '```bash'
+            echo "adb install -r app-release.apk"
+            echo '```'
+            echo
+            echo "This release is signed with the project's long-lived release key, so it"
+            echo "upgrades over previous releases directly."
+            echo
+            echo 'If the install fails with `INSTALL_FAILED_UPDATE_INCOMPATIBLE`, the copy on'
+            echo "the device was signed with a *different* key (an early debug-signed build,"
+            echo "or one from another machine). Remove it first:"
+            echo
+            echo '```bash'
+            echo "adb uninstall com.fynks.keyboardpicker"
+            echo '```'
+            echo
+            echo "### Verify the download"
+            echo
+            echo "Check the APK against the published checksum (Linux and macOS):"
+            echo
+            echo '```bash'
+            echo "sha256sum -c app-release.apk.sha256   # Linux"
+            echo "shasum -a 256 -c app-release.apk.sha256   # macOS"
+            echo '```'
+            echo
+            echo "To confirm an installed APK really is an official build, compare its"
+            echo "signing certificate with this release's:"
+            echo
+            echo '```bash'
+            echo "apksigner verify --print-certs app-release.apk | grep 'certificate SHA-256'"
+            echo '```'
+            echo
+            echo "- Certificate: \`${{ env.SIGNER_DN }}\`"
+            echo "- SHA-256 fingerprint: \`${{ env.CERT_SHA256 }}\`"
+            echo
+            echo "The certificate fingerprint is a property of the signing key. The APK"
+            echo "checksum changes with every rebuild; the fingerprint does not."
+          } > "$NOTES"
           gh release create "$GITHUB_REF_NAME" dist/app-release.apk dist/app-release.apk.sha256 \
             --title "$GITHUB_REF_NAME" \
             --generate-notes \
-            --notes "$(cat <<'EOF'
-          ### Install
-
-          ```bash
-          adb install -r app-release.apk
-          ```
-
-          ### A note on signing
-
-          Signed with a long-lived release key, so this release upgrades cleanly
-          over previous ones. If an install fails with
-          `INSTALL_FAILED_UPDATE_INCOMPATIBLE`, the installed copy was signed
-          with a different key (an early debug-signed build, or one from another
-          machine). Remove it first:
-
-          ```bash
-          adb uninstall com.fynks.keyboardpicker
-          ```
-          EOF
-          )"
+            --notes-file "$NOTES"

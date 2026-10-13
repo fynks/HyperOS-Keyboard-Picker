@@ -1,10 +1,14 @@
 # Keyboard Picker
 
+[![Latest release](https://img.shields.io/github/v/release/fynks/HyperOS-Keyboard-Picker?label=release)](https://github.com/fynks/HyperOS-Keyboard-Picker/releases/latest)
+[![Build](https://github.com/fynks/HyperOS-Keyboard-Picker/actions/workflows/android.yml/badge.svg)](https://github.com/fynks/HyperOS-Keyboard-Picker/actions/workflows/android.yml)
+[![License: MIT](https://img.shields.io/github/license/fynks/HyperOS-Keyboard-Picker)](https://github.com/fynks/HyperOS-Keyboard-Picker/blob/main/LICENSE)
+
 An Android launcher that opens the system's own keyboard chooser — the same
 "Choose input method" dialog as the keyboard-switch button in the navigation
-bar — with one tap from the home screen.
+bar — with one tap from the home screen or the Quick Settings shade.
 
-It calls exactly one public API:
+The activity calls exactly one public API:
 
 ```java
 InputMethodManager imm = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
@@ -20,15 +24,13 @@ imm.showInputMethodPicker();
 - Adds an optional Quick Settings tile, so the chooser can be opened from the
   shade without going to the home screen
 
-### Quick Settings tile
+There are two ways in, and one implementation behind both:
 
-Tap once to add the tile: pull down the shade, tap the pencil/edit icon, find
-**Keyboard Picker**, and drag it in. Then tap it to open the chooser.
-
-The tile launches the same activity as the home-screen icon rather than calling
-the input method API from a service. The chooser dialog attaches to the calling
-window, and the activity's delayed request is the path that was measured to
-work, so there is only one copy of that logic.
+- **Home-screen icon** — `MainActivity` calls
+  `InputMethodManager.showInputMethodPicker()` directly.
+- **Quick Settings tile** — `PickerTileService` does *not* touch the input method
+  API. Android's tile integration collapses the shade and launches that same
+  `MainActivity` via `startActivityAndCollapse`.
 
 ## What it does not do
 
@@ -37,16 +39,39 @@ work, so there is only one copy of that logic.
 - It does not open Settings
 - It has no settings screen, no onboarding, no configuration
 - It has no network access, no analytics and no ads
+- It does not log anything
 
-## Requirements
+## Requirements and compatibility
 
-- Android 14 (API 34) or newer
-- At least two keyboards enabled, otherwise the chooser may list a single
-  entry: *Settings → Additional settings → Languages & input → Keyboard
-  management*
+**Minimum supported: Android 14 (API 34).** `minSdk` is 34; the app will not
+install on anything older.
+
+Two or more keyboards must be enabled, or the chooser lists a single entry:
+*Settings → Additional settings → Languages & input → Keyboard management*.
+
+| Configuration | Status |
+|---|---|
+| Android 14 / HyperOS 1 (API 34) | **Unverified** — permitted by `minSdk`, but never run on this hardware |
+| Android 15 / HyperOS 2 (API 35) | **Verified** — chooser opened on 18/18 launches; Quick Settings tile 6/6 |
+| Android 16+ (API 36+) | **Unverified** — `targetSdk` is held at 35 pending testing |
+
+"Unverified" means the app is allowed to run there by `minSdk`, but no test was
+performed on such a device. If you have one, please [open an issue](https://github.com/fynks/HyperOS-Keyboard-Picker/issues/new/choose).
+
+`targetSdk` is deliberately 35 rather than 36: the chooser is the entire app, and
+raising it without hardware to test on would risk the one behaviour that matters.
 
 No runtime permissions are requested, because `showInputMethodPicker()` is
-public API.
+public API. The Quick Settings tile uses a system permission described under
+[Privacy](#privacy).
+
+## Install and use
+
+### From a release
+
+Download `app-release.apk` from the [Releases](../../releases) page, then:
+
+```bash
 
 ## Install and use
 
@@ -59,8 +84,15 @@ adb install -r app-release.apk
 or copy the APK to the phone and open it (you will need to allow installs from
 your file manager).
 
-Tap **Keyboard Picker** on the home screen, pick a keyboard, and the app is
-gone. That is the whole interaction.
+### Using it
+
+**From the home screen:** tap **Keyboard Picker**, pick a keyboard, and the app
+is gone.
+
+**From Quick Settings:** pull the shade down, tap the pencil/edit icon, find
+**Keyboard Picker**, and drag it into the tile area. Tapping it opens the same
+chooser and collapses the shade. To remove it later, edit the shade again and
+drag it back out.
 
 > Releases are signed with a long-lived key and upgrade cleanly over each other.
 > If you have a build installed that was signed with a *different* key (an early
@@ -70,6 +102,33 @@ gone. That is the whole interaction.
 > ```bash
 > adb uninstall com.fynks.keyboardpicker
 > ```
+
+## Troubleshooting
+
+**Nothing appears when I tap the icon.**
+The request was refused. This is the app's main failure mode and it is silent by
+design. Check, in order:
+
+1. *Are two or more keyboards enabled?* With only one, there is nothing to pick.
+   *Settings → Additional settings → Languages & input → Keyboard management.*
+2. *Are you on Android 14 or newer?* Anything below API 34 cannot install it.
+3. On MIUI/HyperOS, try the per-app **"Display pop-up windows while running in
+   the background"** setting (*Settings → Apps → Keyboard Picker → Other
+   permissions*). Not normally required, since the activity is foreground when the
+   request is made, but it is the first thing to try on heavily modified ROMs.
+
+**A dark screen appears and then disappears.**
+That is the app working: the opaque activity is visible for a moment while it
+waits, and it closes itself if the chooser does not open within 10 seconds.
+
+**The app does not appear in the Quick Settings edit list.**
+Only installed, enabled builds appear. Reinstall, then open the shade's edit mode
+again.
+
+**The chooser flashes and closes immediately.**
+Report it with your device model and Android/HyperOS version via the [issue
+template](.github/ISSUE_TEMPLATE/bug_report.yml) — this is a bug, not expected
+behaviour.
 
 ## Why the native picker
 
@@ -94,6 +153,24 @@ things are required, both established by measurement on Android 15 / HyperOS 2.0
 The activity then has to stay alive while the chooser is up, or the window
 hosting the dialog is destroyed mid-selection. `onWindowFocusChanged` provides
 that signal: focus is lost when the chooser opens and returned when it closes.
+
+Focus alone is not sufficient evidence, though. Losing focus to something else
+entirely — the notification shade, a system dialog, the screen turning off — says
+nothing about the chooser, so the activity tracks `IDLE` (created, nothing
+requested yet) separately from `PENDING` (request made, outcome unknown). Only a
+focus loss *after* a request counts as proof the chooser opened. Getting this
+wrong means a random shade pull during the first half second could make the app
+close without ever showing anything.
+
+### On the window theme
+
+The activity theme is `Theme.Translucent.NoTitleBar`, while its layout draws an
+opaque background. That looks contradictory, but the layout wins: the window that
+reaches the window manager is fully opaque because the content view fills it. The
+theme was left alone deliberately. Switching to an opaque theme would change
+window flags and animation behaviour, and that cannot be justified without
+testing the chooser lifecycle on real hardware — which is not something to do
+for a cosmetic gain.
 
 ## Build
 
@@ -148,15 +225,42 @@ falls back to a per-run debug key and every build has a different signature.
 
 ### Testing
 
-The app's behaviour is a side effect on another process, so it is verified by
-launching it and checking which window holds focus:
+**Version consistency** (no device needed):
+
+```bash
+scripts/check-release-version.sh v1.1.0   # or omit the tag for a dev check
+```
+
+It compares the tag against Gradle's `versionName`, and with `APK=` set also
+checks the built APK's own metadata. This runs in CI and fails the build on a
+mismatch.
+
+**Functional smoke test** (needs a device or emulator):
 
 ```bash
 scripts/smoke-test.sh 10
 ```
 
-It needs `adb` and a way to inject input events — either *Developer options →
-USB debugging (Security settings)*, or root.
+The app's behaviour is a side effect on another process — a system dialog — so
+this launches the app and checks that a system dialog took focus while our
+activity stayed frontmost. It deliberately does **not** match the chooser's title
+text, so it works on a device set to a non-English language.
+
+Prerequisites:
+
+- `adb` on `PATH`, one authorised device, the app installed
+- Two or more IMEs enabled
+- A way to inject input events to press HOME. Plain `adb shell input` is tried
+  first; on MIUI/HyperOS the shell is denied `INJECT_EVENTS`, so the script falls
+  back to `su -c`, which needs root (KernelSU, Magisk). Alternatively enable
+  *Developer options → USB debugging (Security settings)*, which may avoid root.
+
+**Limitations.** This cannot run on GitHub-hosted CI without provisioning an
+emulator or a self-hosted device, so CI does build, lint and validate release
+metadata but does **not** run the smoke test. Passing the smoke test proves the
+chooser opens on the device you ran it on; it is not evidence about other devices
+or Android versions. See the [compatibility table](#requirements-and-compatibility)
+for what has actually been exercised.
 
 CI builds every push and publishes tagged releases; see
 [`.github/workflows/android.yml`](.github/workflows/android.yml).
@@ -166,13 +270,18 @@ CI builds every push and publishes tagged releases; see
 ```
 app/src/main/
 ├── AndroidManifest.xml
-├── java/com/fynks/keyboardpicker/MainActivity.java   # the entire app
+├── java/com/fynks/keyboardpicker/
+│   ├── MainActivity.java        # opens the chooser, owns the window lifecycle
+│   └── PickerTileService.java   # Quick Settings tile; launches MainActivity
 └── res/
     ├── drawable/       # adaptive icon layers
     ├── layout/         # the opaque window the chooser attaches to
     ├── mipmap-anydpi/  # adaptive icon (the only icon form needed at minSdk 34)
-    └── values/strings.xml
-scripts/smoke-test.sh
+    └── values/         # strings.xml and colors.xml
+scripts/
+├── check-release-version.sh   # tag vs Gradle version vs APK metadata
+└── smoke-test.sh              # on-device functional check
+docs/                          # screenshot.png, icon-512.png
 ```
 
 The icon is the `keyboard` glyph from [Tabler Icons](https://tabler.io/icons)
@@ -192,6 +301,12 @@ spacebar and drops all six dots.
   destroys the window before the chooser is dismissed.
 - **Do not make the root view translucent or empty**, and do not remove the
   delay before requesting the chooser. Both silently break the app.
+- **Do not treat focus loss as proof the chooser opened** unless a request has
+  already been made. See `IDLE` vs `PENDING` in `MainActivity`.
+- **Do not call the input method API from `PickerTileService`.** The tile exists
+  to launch the activity, which is the only place that lifecycle lives.
+- **Do not add logging.** There is intentionally none, and the app's value is
+  partly that it does nothing else.
 - `excludeFromRecents` is intentional: there is no UI to navigate back to.
 
 ## Privacy

@@ -1,0 +1,118 @@
+name: Bug report
+description: Report a problem with Keyboard Picker
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting. Most reports are about the chooser not appearing
+        at all, so please include the details below — especially whether two or
+        more keyboards are enabled.
+
+  - type: input
+    id: device
+    attributes:
+      label: Device model
+      placeholder: Redmi Note 13 4G
+    validations:
+      required: true
+
+  - type: input
+    id: android-version
+    attributes:
+      label: Android version
+      placeholder: "15"
+    validations:
+      required: true
+
+  - type: input
+    id: hyperos-version
+    attributes:
+      label: HyperOS version
+      description: Leave blank if your device does not run HyperOS or MIUI.
+      placeholder: HyperOS 2.0
+
+  - type: input
+    id: app-version
+    attributes:
+      label: Installed Keyboard Picker version
+      description: Settings → Apps → Keyboard Picker, or the version shown on the release page you installed.
+      placeholder: 1.1.0
+    validations:
+      required: true
+
+  - type: input
+    id: enabled-keyboards
+    attributes:
+      label: Number of enabled keyboards
+      description: Settings → Additional settings → Languages & input → Keyboard management
+      placeholder: "2"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: launch-method
+    attributes:
+      label: How did you launch it?
+      options:
+        - Home-screen icon
+        - Quick Settings tile
+        - Both fail the same way
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Tap the Keyboard Picker icon
+        2. Nothing appears
+        3. ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected result
+      placeholder: The system "Choose input method" dialog appears.
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual result
+      description: What you saw instead. If a dark screen appeared, mention whether it closed on its own.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: reproducible
+    attributes:
+      label: Is it reproducible?
+      options:
+        - "Yes, every time"
+        - "Sometimes"
+        - "Only once"
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: extras
+    attributes:
+      label: Optional
+      options:
+        - label: I enabled "Display pop-up windows while running in background" for this app and the problem persists
+          required: false
+        - label: I can reproduce this with a clean install after uninstalling the previous version
+          required: false
+
+  - type: markdown
+    attributes:
+      value: |
+        Please do not include IME custom dictionaries, keyboard content, personal
+        data, or screenshots of your typing. A device model and version numbers are
+        enough to reproduce most issues.

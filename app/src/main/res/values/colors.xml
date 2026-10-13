@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+        The activity window must be opaque: the native chooser attaches to it, and
+        a translucent or empty window is ignored (see MainActivity).
+    -->
+    <color name="window_background">#FF101418</color>
+    <color name="status_text">#FFE6EAF2</color>
+</resources>
