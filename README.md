@@ -281,7 +281,7 @@ docs/                          # screenshot.png, icon-512.png
 
 The icon is the `keyboard` glyph from [Tabler Icons](https://tabler.io/icons)
 (MIT) — the only vector artwork in the project, and the source of
-`docs/icon-512.png`, a raster preview for READMEs and store listings. Because
+`docs/icon-512.png`, a raster preview for READMEs. Because
 `minSdk` is 34, every device is past API 26, so no legacy density mipmaps are
 shipped.
 
@@ -326,62 +326,6 @@ The Quick Settings tile is gated by `android.permission.BIND_QUICK_SETTINGS_TILE
 declared on the service, which is how Android restricts tile binding. That is a
 signature-level system permission granted at install time; it is not a runtime
 permission and never produces a permission prompt.
-
-## Store listing copy
-
-Short description (25 characters, within Play's 30-character limit):
-
-```
-One-tap keyboard switcher
-```
-
-Full description:
-
-```
-Keyboard Picker puts the system keyboard chooser one tap away.
-
-Tap the icon and Android's own "Choose input method" dialog opens — the exact
-same dialog as the keyboard-switch button in your navigation bar. Pick a
-keyboard, and Keyboard Picker gets out of the way.
-
-Prefer the shade? Add the Quick Settings tile and the chooser opens without
-leaving it.
-
-That's the whole app.
-
-WHAT IT DOES
-• Opens the real system keyboard chooser, from the home screen icon or a
-  Quick Settings tile
-• Nothing else
-
-WHAT IT DOES NOT DO
-• It will not switch to a keyboard for you
-• It does not show a custom or look-alike dialog
-• It does not open Settings
-• It does not run in the background, send anything over the network, or
-  collect anything about you
-
-PRIVACY
-Keyboard Picker declares no runtime permissions and requests no access to
-anything. It has no analytics, no ads and no network access, and it stores no
-data at all. The optional Quick Settings tile is protected by a system
-permission granted at install time, so the app never shows a permission
-prompt.
-
-HOW IT WORKS
-Technically interesting, if you like this sort of thing: the chooser dialog is
-attached to the calling app's window, so a naive implementation is silently
-ignored by Android. Keyboard Picker gives it a real window, waits for that
-window to settle, and keeps the activity alive until the dialog closes — which
-is why it doesn't vanish the moment you tap it.
-
-REQUIREMENTS
-Android 14 or newer. Have at least two keyboards enabled (Settings →
-Additional settings → Languages & input → Keyboard management) or the chooser
-may only list one.
-
-Open source, MIT licensed.
-```
 
 ## License
 
