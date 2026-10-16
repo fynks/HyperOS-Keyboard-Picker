@@ -72,12 +72,6 @@ public API. The Quick Settings tile uses a system permission described under
 Download `app-release.apk` from the [Releases](../../releases) page, then:
 
 ```bash
-
-## Install and use
-
-Download `app-release.apk` from the [Releases](../../releases) page, then:
-
-```bash
 adb install -r app-release.apk
 ```
 
@@ -274,10 +268,11 @@ app/src/main/
 │   ├── MainActivity.java        # opens the chooser, owns the window lifecycle
 │   └── PickerTileService.java   # Quick Settings tile; launches MainActivity
 └── res/
-    ├── drawable/       # adaptive icon layers
+    ├── drawable/       # adaptive icon layers and the dedicated tile icon
     ├── layout/         # the opaque window the chooser attaches to
     ├── mipmap-anydpi/  # adaptive icon (the only icon form needed at minSdk 34)
-    └── values/         # strings.xml and colors.xml
+    ├── values/         # strings.xml, colors.xml (light icon palette)
+    └── values-night/   # night icon palette
 scripts/
 ├── check-release-version.sh   # tag vs Gradle version vs APK metadata
 └── smoke-test.sh              # on-device functional check
@@ -290,10 +285,18 @@ The icon is the `keyboard` glyph from [Tabler Icons](https://tabler.io/icons)
 `minSdk` is 34, every device is past API 26, so no legacy density mipmaps are
 shipped.
 
-The glyph's key dots had to be encoded as absolute arcs with `fillColor` on each
-path. Written as relative arcs inside a group with an inherited `fillColor` — the
-obvious translation — VectorDrawable silently renders the keyboard outline and
-spacebar and drops all six dots.
+The launcher icon is adaptive with a night-qualified palette: a soft white
+shade and the navy glyph in light mode, the opposite dark shade and the white
+glyph at night. The `monochrome` layer lets Material You themed icons tint the
+glyph live. The Quick Settings tile carries a dedicated 24dp full-bleed icon —
+reusing the launcher foreground's 108dp canvas renders the glyph tiny in the
+shade.
+
+Two VectorDrawable pitfalls are encoded in comments in the drawables
+themselves: the key dots must be absolute arcs with `fillColor` on each path
+(written as relative arcs inside a group with an inherited `fillColor`,
+VectorDrawable silently drops all six dots), and zero-length stroked subpaths
+render unreliably, so the dots are circles instead.
 
 ## Things to know before changing this
 
