@@ -67,35 +67,14 @@ public API. The Quick Settings tile uses a system permission described under
 
 ## Install and use
 
-### From a release
-
-Download `app-release.apk` from the [Releases](../../releases) page, then:
-
-```bash
-adb install -r app-release.apk
-```
-
-or copy the APK to the phone and open it (you will need to allow installs from
-your file manager).
-
-### Using it
-
-**From the home screen:** tap **Keyboard Picker**, pick a keyboard, and the app
-is gone.
-
-**From Quick Settings:** pull the shade down, tap the pencil/edit icon, find
-**Keyboard Picker**, and drag it into the tile area. Tapping it opens the same
-chooser and collapses the shade. To remove it later, edit the shade again and
-drag it back out.
+1. Download `app-release.apk` from the [Releases](../../releases) page, and install it.
+2. **From the home screen:** tap **Keyboard Picker**, pick a keyboard, and the appis gone.
+3. **From Quick Settings:** pull the shade down, tap the pencil/edit icon, find **Keyboard Picker**, and drag it into the tile area. Tapping it opens the same chooser and collapses the shade. To remove it later, edit the shade again and drag it back out.
 
 > Releases are signed with a long-lived key and upgrade cleanly over each other.
 > If you have a build installed that was signed with a *different* key (an early
 > debug-signed build, or one from another machine), the install will fail with
-> `INSTALL_FAILED_UPDATE_INCOMPATIBLE`. Remove the old copy first:
->
-> ```bash
-> adb uninstall com.fynks.keyboardpicker
-> ```
+> `INSTALL_FAILED_UPDATE_INCOMPATIBLE`. Remove the old copy firstadn then install the new one from the release page.
 
 ## Troubleshooting
 
@@ -124,47 +103,6 @@ Report it with your device model and Android/HyperOS version via the [issue
 template](.github/ISSUE_TEMPLATE/bug_report.yml) — this is a bug, not expected
 behaviour.
 
-## Why the native picker
-
-Using the system dialog means the app behaves exactly like the navigation bar
-button, on every device and in the user's own language, and it cannot drift out
-of sync with the platform. Building an equivalent dialog by hand would mean
-reimplementing IME enumeration, locale handling, per-app restrictions and
-accessibility behaviour — and would still be wrong the moment Android changes.
-
-The catch is that the chooser is a system dialog *attached to the calling
-activity's window*. An app that opens it badly looks like it does nothing at
-all: the request is dropped silently, with no exception and no log line. Two
-things are required, both established by measurement on Android 15 / HyperOS 2.0:
-
-1. **A real window.** The activity must `setContentView()` with an opaque view.
-   A translucent or empty window is ignored.
-2. **Timing.** The chooser must be requested after a short delay. Requesting it
-   immediately, or from the first focus callback, failed on every attempt
-   (0/12 runs), because the window has not been registered with the window
-   manager yet. A delayed first request plus one retry opened it on every run.
-
-The activity then has to stay alive while the chooser is up, or the window
-hosting the dialog is destroyed mid-selection. `onWindowFocusChanged` provides
-that signal: focus is lost when the chooser opens and returned when it closes.
-
-Focus alone is not sufficient evidence, though. Losing focus to something else
-entirely — the notification shade, a system dialog, the screen turning off — says
-nothing about the chooser, so the activity tracks `IDLE` (created, nothing
-requested yet) separately from `PENDING` (request made, outcome unknown). Only a
-focus loss *after* a request counts as proof the chooser opened. Getting this
-wrong means a random shade pull during the first half second could make the app
-close without ever showing anything.
-
-### On the window theme
-
-The activity theme is `Theme.Translucent.NoTitleBar`, while its layout draws an
-opaque background. That looks contradictory, but the layout wins: the window that
-reaches the window manager is fully opaque because the content view fills it. The
-theme was left alone deliberately. Switching to an opaque theme would change
-window flags and animation behaviour, and that cannot be justified without
-testing the chooser lifecycle on real hardware — which is not something to do
-for a cosmetic gain.
 
 ## Build
 
