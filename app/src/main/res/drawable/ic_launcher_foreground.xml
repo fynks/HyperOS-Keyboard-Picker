@@ -21,7 +21,7 @@
 
         <path
             android:pathData="M2,8 A2,2 0 0 1 4,6 L20,6 A2,2 0 0 1 22,8 L22,16 A2,2 0 0 1 20,18 L4,18 A2,2 0 0 1 2,16 Z"
-            android:strokeColor="#FFFFFFFF"
+            android:strokeColor="@color/launcher_glyph"
             android:strokeWidth="2"
             android:strokeLineCap="round"
             android:strokeLineJoin="round" />
@@ -29,22 +29,22 @@
         <!-- spacebar -->
         <path
             android:pathData="M10,14 L14,14"
-            android:strokeColor="#FFFFFFFF"
+            android:strokeColor="@color/launcher_glyph"
             android:strokeWidth="2"
             android:strokeLineCap="round" />
 
         <!-- keys: absolute arcs, fillColor on each path rather than inherited -->
-        <path android:fillColor="#FFFFFFFF"
-            android:pathData="M7,9 A1,1 0 1 0 7,11 A1,1 0 1 0 7,9 Z" />
-        <path android:fillColor="#FFFFFFFF"
-            android:pathData="M11,9 A1,1 0 1 0 11,11 A1,1 0 1 0 11,9 Z" />
-        <path android:fillColor="#FFFFFFFF"
-            android:pathData="M15,9 A1,1 0 1 0 15,11 A1,1 0 1 0 15,9 Z" />
-        <path android:fillColor="#FFFFFFFF"
-            android:pathData="M19,9 A1,1 0 1 0 19,11 A1,1 0 1 0 19,9 Z" />
-        <path android:fillColor="#FFFFFFFF"
-            android:pathData="M7,13 A1,1 0 1 0 7,15 A1,1 0 1 0 7,13 Z" />
-        <path android:fillColor="#FFFFFFFF"
-            android:pathData="M19,13 A1,1 0 1 0 19,15 A1,1 0 1 0 19,13 Z" />
+        <path android:fillColor="@color/launcher_glyph"
+            android:pathData="M6,9 A1,1 0 1 0 6,11 A1,1 0 1 0 6,9 Z" />
+        <path android:fillColor="@color/launcher_glyph"
+            android:pathData="M10,9 A1,1 0 1 0 10,11 A1,1 0 1 0 10,9 Z" />
+        <path android:fillColor="@color/launcher_glyph"
+            android:pathData="M14,9 A1,1 0 1 0 14,11 A1,1 0 1 0 14,9 Z" />
+        <path android:fillColor="@color/launcher_glyph"
+            android:pathData="M18,9 A1,1 0 1 0 18,11 A1,1 0 1 0 18,9 Z" />
+        <path android:fillColor="@color/launcher_glyph"
+            android:pathData="M6,13 A1,1 0 1 0 6,15 A1,1 0 1 0 6,13 Z" />
+        <path android:fillColor="@color/launcher_glyph"
+            android:pathData="M18,13 A1,1 0 1 0 18,15 A1,1 0 1 0 18,13 Z" />
     </group>
 </vector>

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Night variants: the opposite dark shade of the light palette, cool-tinted
+         to match the navy glyph family, plus the white glyph. -->
+    <color name="launcher_background_top">#FF1F2126</color>
+    <color name="launcher_background_bottom">#FF121317</color>
+    <color name="launcher_glyph">#FFFFFFFF</color>
+</resources>

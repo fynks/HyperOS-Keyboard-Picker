@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Quick Settings tile icon: the same Tabler "keyboard" glyph as the launcher
+  foreground, but on a 24x24dp canvas that it fills edge to edge.
+
+  The launcher foreground cannot be reused here: it is a 108dp adaptive-icon
+  canvas whose glyph sits inside the safe zone, and QS draws the tile icon
+  as-is, so the padding would render the glyph tiny. SystemUI tints tile
+  icons itself, so the white stroke color below is only a fallback.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+
+    <path
+        android:pathData="M2,8 A2,2 0 0 1 4,6 L20,6 A2,2 0 0 1 22,8 L22,16 A2,2 0 0 1 20,18 L4,18 A2,2 0 0 1 2,16 Z"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+
+    <!-- spacebar -->
+    <path
+        android:pathData="M10,14 L14,14"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="2"
+        android:strokeLineCap="round" />
+
+    <!-- keys: absolute arcs, fillColor on each path rather than inherited -->
+    <path android:fillColor="#FFFFFFFF"
+        android:pathData="M6,9 A1,1 0 1 0 6,11 A1,1 0 1 0 6,9 Z" />
+    <path android:fillColor="#FFFFFFFF"
+        android:pathData="M10,9 A1,1 0 1 0 10,11 A1,1 0 1 0 10,9 Z" />
+    <path android:fillColor="#FFFFFFFF"
+        android:pathData="M14,9 A1,1 0 1 0 14,11 A1,1 0 1 0 14,9 Z" />
+    <path android:fillColor="#FFFFFFFF"
+        android:pathData="M18,9 A1,1 0 1 0 18,11 A1,1 0 1 0 18,9 Z" />
+    <path android:fillColor="#FFFFFFFF"
+        android:pathData="M6,13 A1,1 0 1 0 6,15 A1,1 0 1 0 6,13 Z" />
+    <path android:fillColor="#FFFFFFFF"
+        android:pathData="M18,13 A1,1 0 1 0 18,15 A1,1 0 1 0 18,13 Z" />
+</vector>

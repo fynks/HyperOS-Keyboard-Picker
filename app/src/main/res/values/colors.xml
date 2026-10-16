@@ -6,4 +6,13 @@
     -->
     <color name="window_background">#FF101418</color>
     <color name="status_text">#FFE6EAF2</color>
+
+    <!--
+        Launcher icon palette. The adaptive icon layers reference these, and
+        values-night/ flips them so the icon reads well in both modes:
+        light = soft white tile + navy glyph, dark = the opposite dark shade + white glyph.
+    -->
+    <color name="launcher_background_top">#FFFAFBFD</color>
+    <color name="launcher_background_bottom">#FFECEEF3</color>
+    <color name="launcher_glyph">#FF16233F</color>
 </resources>
