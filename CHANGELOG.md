@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-10-17
+
 ### Fixed
 - `versionName` corrected from `1.0.0` to `1.1.0`. The published `v1.1.0` APK
   disagreed with its own tag, because `versionName` was left behind when the tile
@@ -24,6 +26,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `removeCallbacks(this::retryChooser)` could never match the posted runnable and
   was silently a no-op.
 - Layout colours moved from hardcoded literals to `res/values/colors.xml`.
+- The Quick Settings tile reused the launcher's adaptive-icon foreground as its
+  icon. That is a 108dp canvas whose glyph sits in the safe zone, and the shade
+  draws tile icons as-is, so the keyboard rendered at roughly a third of the
+  size of the tiles around it. The tile now has a dedicated 24dp full-bleed
+  icon (`ic_tile_keyboard`).
+- The keyboard glyph's key dots sat at x = 7, 11, 15, 19 instead of the
+  Tabler source's 6, 10, 14, 18, so the key rows were shifted 1dp right and
+  the spacebar (correctly at 10–14) appeared off-centre — most visibly in the
+  tile, where the glyph fills its canvas. Fixed in the tile icon and the
+  launcher foreground.
 
 ### Added
 - `scripts/check-release-version.sh`, wired into CI. It fails a tagged build when
@@ -35,6 +47,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   upgrade instructions, `sha256sum -c` verification for Linux and macOS, and the
   signing certificate's SHA-256 fingerprint, read from the artifact rather than
   hardcoded.
+- Material-style adaptive launcher icon: the palette is driven from
+  `values/colors.xml` and `values-night/colors.xml` — a soft white shade with
+  the navy glyph in light mode, the opposite dark shade with the white glyph
+  at night. The existing `monochrome` layer keeps live Material You themed
+  icons working.
 
 ### Changed
 - `scripts/smoke-test.sh` now implements its documented input fallback correctly
@@ -48,6 +65,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - README: project tree corrected to include `PickerTileService`, an
   Android 14 / 15 / 16+ compatibility table marking unverified configurations,
   a troubleshooting section, and smoke-test prerequisites and limitations.
+- README: repaired the broken "Install and use" section (a duplicated heading
+  with an unclosed code fence), and updated the icon notes for the night
+  palette, themed icons, and the dedicated tile icon.
+
+### Verified
+- On Android 15 / HyperOS 2.0 (23129RAA4G) over wireless ADB: the tile icon
+  renders at the same visual size as the neighbouring system tiles, the spacebar
+  is centred, and the launcher icon renders the light palette in light mode and
+  the dark palette at night (after a launcher restart — the HyperOS launcher
+  re-renders icons on process restart or reinstall, not live on a dark-mode
+  toggle).
+- Previous session's fixes (focus handling, version metadata) verified on the
+  same device with the debug build.
 
 ## [1.1.0] - 2026-10-13
 
