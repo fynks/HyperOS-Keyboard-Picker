@@ -3,6 +3,7 @@ package com.fynks.keyboardpicker;
 import android.app.Activity;
 import android.os.Bundle;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.Toast;
 
 /**
  * Opens Android's own keyboard chooser via
@@ -64,7 +65,17 @@ public class MainActivity extends Activity {
             return;
         }
         state = PENDING;
-        imm.showInputMethodPicker();
+        try {
+            imm.showInputMethodPicker();
+        } catch (Exception failure) {
+            // Includes ActivityNotFoundException; ending this launch prevents a second Toast.
+            state = CLOSED;
+            Toast.makeText(this,
+                    "Couldn't open keyboard picker — enable at least two keyboards in Settings.",
+                    Toast.LENGTH_SHORT).show();
+            finishAndRemoveTask();
+            return;
+        }
         getWindow().getDecorView().postDelayed(this::retryChooser, RETRY_REQUEST_AFTER_MS);
         getWindow().getDecorView().postDelayed(this::giveUp, GIVE_UP_AFTER_MS);
     }
@@ -74,7 +85,17 @@ public class MainActivity extends Activity {
             return;
         }
         retried = true;
-        imm.showInputMethodPicker();
+        try {
+            imm.showInputMethodPicker();
+        } catch (Exception failure) {
+            // Includes ActivityNotFoundException; ending this launch prevents a second Toast.
+            state = CLOSED;
+            Toast.makeText(this,
+                    "Couldn't open keyboard picker — enable at least two keyboards in Settings.",
+                    Toast.LENGTH_SHORT).show();
+            finishAndRemoveTask();
+            return;
+        }
     }
 
     private void giveUp() {
@@ -89,12 +110,11 @@ public class MainActivity extends Activity {
     public void onWindowFocusChanged(boolean hasFocus) {
         super.onWindowFocusChanged(hasFocus);
         if (state == PENDING && !hasFocus) {
-            // The chooser opened: the retry and the give-up timer are moot now.
+            // The chooser opened: pending callbacks now do nothing because state is SHOWN.
             state = SHOWN;
         } else if (state == SHOWN && hasFocus) {
             state = CLOSED;
             finishAndRemoveTask();
         }
     }
-
 }
