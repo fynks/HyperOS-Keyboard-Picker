@@ -2,8 +2,6 @@ package com.fynks.keyboardpicker;
 
 import android.app.Activity;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
 import android.view.inputmethod.InputMethodManager;
 
 /**
@@ -43,13 +41,6 @@ public class MainActivity extends Activity {
     /** Focus returned after the chooser had it; safe to finish. */
     private static final int CLOSED = 3;
 
-    private final Handler ui = new Handler(Looper.getMainLooper());
-    // Held as fields: a method reference creates a new instance each time, so
-    // removeCallbacks would not match the instance that was posted.
-    private final Runnable requestTask = this::requestChooser;
-    private final Runnable retryTask = this::retryChooser;
-    private final Runnable giveUpTask = this::giveUp;
-
     private InputMethodManager imm;
     private int state = IDLE;
     private boolean retried;
@@ -65,7 +56,7 @@ public class MainActivity extends Activity {
             finish();
             return;
         }
-        ui.postDelayed(requestTask, FIRST_REQUEST_AFTER_MS);
+        getWindow().getDecorView().postDelayed(this::requestChooser, FIRST_REQUEST_AFTER_MS);
     }
 
     private void requestChooser() {
@@ -74,12 +65,12 @@ public class MainActivity extends Activity {
         }
         state = PENDING;
         imm.showInputMethodPicker();
-        ui.postDelayed(retryTask, RETRY_REQUEST_AFTER_MS);
-        ui.postDelayed(giveUpTask, GIVE_UP_AFTER_MS);
+        getWindow().getDecorView().postDelayed(this::retryChooser, RETRY_REQUEST_AFTER_MS);
+        getWindow().getDecorView().postDelayed(this::giveUp, GIVE_UP_AFTER_MS);
     }
 
     private void retryChooser() {
-        if (retried || state != PENDING) {
+        if (isFinishing() || isDestroyed() || retried || state != PENDING) {
             return;
         }
         retried = true;
@@ -89,7 +80,7 @@ public class MainActivity extends Activity {
     private void giveUp() {
         // Still PENDING means the chooser never took focus: the request was
         // refused, so close instead of leaving a window that does nothing.
-        if (state == PENDING) {
+        if (!isFinishing() && !isDestroyed() && state == PENDING) {
             finish();
         }
     }
@@ -100,16 +91,10 @@ public class MainActivity extends Activity {
         if (state == PENDING && !hasFocus) {
             // The chooser opened: the retry and the give-up timer are moot now.
             state = SHOWN;
-            ui.removeCallbacks(retryTask);
         } else if (state == SHOWN && hasFocus) {
             state = CLOSED;
             finish();
         }
     }
 
-    @Override
-    protected void onDestroy() {
-        ui.removeCallbacksAndMessages(null);
-        super.onDestroy();
-    }
 }
