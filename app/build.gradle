@@ -53,6 +53,8 @@ android {
 
     buildTypes {
         release {
+            minifyEnabled true
+            shrinkResources true
             // Falls back to the debug key when no keystore.properties is present, so
             // the project always builds. Once a keystore exists this is signed with
             // it, and successive releases upgrade cleanly over one another - which a
