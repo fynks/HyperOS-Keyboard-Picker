@@ -45,6 +45,7 @@ public class MainActivity extends Activity {
     private InputMethodManager imm;
     private int state = IDLE;
     private boolean retried;
+    private boolean failureToastShown;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,7 +58,34 @@ public class MainActivity extends Activity {
             finishAndRemoveTask();
             return;
         }
-        getWindow().getDecorView().postDelayed(this::requestChooser, FIRST_REQUEST_AFTER_MS);
+        getWindow().getDecorView().postDelayed(this::requestChooserSafely, FIRST_REQUEST_AFTER_MS);
+    }
+
+    private void requestChooserSafely() {
+        try {
+            requestChooser();
+        } catch (Exception failure) {
+            // The picker threw before requestChooser could schedule its timers.
+            // Allow the same delayed retry rather than reporting the first failure.
+            getWindow().getDecorView().postDelayed(this::retryChooserSafely, RETRY_REQUEST_AFTER_MS);
+            getWindow().getDecorView().postDelayed(this::giveUp, GIVE_UP_AFTER_MS);
+        }
+    }
+
+    private void retryChooserSafely() {
+        try {
+            retryChooser();
+        } catch (Exception failure) {
+            // Includes ActivityNotFoundException. This was the final attempt.
+            state = CLOSED;
+            if (!failureToastShown) {
+                failureToastShown = true;
+                Toast.makeText(this,
+                        "Couldn't open keyboard picker — enable at least two keyboards in Settings.",
+                        Toast.LENGTH_SHORT).show();
+            }
+            finishAndRemoveTask();
+        }
     }
 
     private void requestChooser() {
@@ -65,18 +93,8 @@ public class MainActivity extends Activity {
             return;
         }
         state = PENDING;
-        try {
-            imm.showInputMethodPicker();
-        } catch (Exception failure) {
-            // Includes ActivityNotFoundException; ending this launch prevents a second Toast.
-            state = CLOSED;
-            Toast.makeText(this,
-                    "Couldn't open keyboard picker — enable at least two keyboards in Settings.",
-                    Toast.LENGTH_SHORT).show();
-            finishAndRemoveTask();
-            return;
-        }
-        getWindow().getDecorView().postDelayed(this::retryChooser, RETRY_REQUEST_AFTER_MS);
+        imm.showInputMethodPicker();
+        getWindow().getDecorView().postDelayed(this::retryChooserSafely, RETRY_REQUEST_AFTER_MS);
         getWindow().getDecorView().postDelayed(this::giveUp, GIVE_UP_AFTER_MS);
     }
 
@@ -85,17 +103,7 @@ public class MainActivity extends Activity {
             return;
         }
         retried = true;
-        try {
-            imm.showInputMethodPicker();
-        } catch (Exception failure) {
-            // Includes ActivityNotFoundException; ending this launch prevents a second Toast.
-            state = CLOSED;
-            Toast.makeText(this,
-                    "Couldn't open keyboard picker — enable at least two keyboards in Settings.",
-                    Toast.LENGTH_SHORT).show();
-            finishAndRemoveTask();
-            return;
-        }
+        imm.showInputMethodPicker();
     }
 
     private void giveUp() {
