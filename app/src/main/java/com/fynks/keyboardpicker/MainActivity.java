@@ -53,7 +53,7 @@ public class MainActivity extends Activity {
 
         imm = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
         if (imm == null) {
-            finish();
+            finishAndRemoveTask();
             return;
         }
         getWindow().getDecorView().postDelayed(this::requestChooser, FIRST_REQUEST_AFTER_MS);
@@ -81,7 +81,7 @@ public class MainActivity extends Activity {
         // Still PENDING means the chooser never took focus: the request was
         // refused, so close instead of leaving a window that does nothing.
         if (!isFinishing() && !isDestroyed() && state == PENDING) {
-            finish();
+            finishAndRemoveTask();
         }
     }
 
@@ -93,7 +93,7 @@ public class MainActivity extends Activity {
             state = SHOWN;
         } else if (state == SHOWN && hasFocus) {
             state = CLOSED;
-            finish();
+            finishAndRemoveTask();
         }
     }
 
