@@ -205,28 +205,6 @@ chooser opens on the device you ran it on; it is not evidence about other device
 or Android versions. See the [compatibility table](#requirements-and-compatibility)
 for what has actually been exercised.
 
-**IME-pair logic** (host, no device needed):
-
-```bash
-scripts/test-ime-pair.sh
-```
-
-Compiles `ImeIds.java` with plain `javac` and checks the flip mapping with
-literal IME ids. No Android SDK or dependencies.
-
-**Tile flip test** (device-specific, needs the debug build):
-
-```bash
-scripts/flip-test.sh
-```
-
-Asserts that a tile tap switches SwiftKey ↔ Gboard, that a second tap switches
-back, and that a long-press opens the chooser. Prerequisites: one authorised
-device at 1080×2400, the app installed with the tile added to the shade,
-KernelSU root granted to the app, and both configured IMEs enabled. The script
-wakes the screen, waits for SystemUI to bind the tile, taps the first tile in
-the expanded shade, and restores the original IME on exit.
-
 CI builds every push and publishes tagged releases; see
 [`.github/workflows/android.yml`](.github/workflows/android.yml).
 
@@ -248,10 +226,8 @@ app/src/main/
     └── values-night/   # night icon palette
 scripts/
 ├── check-release-version.sh   # tag vs Gradle version vs APK metadata
-├── smoke-test.sh              # on-device functional check
-├── test-ime-pair.sh           # host test for the flip mapping
-└── flip-test.sh               # on-device tile flip + long-press check
-docs/                          # screenshot.png, icon-512.png
+└── smoke-test.sh              # on-device functional check
+docs/                          # screenshot.png, icon-512.png, release screenshots
 ```
 
 The icon is the `keyboard` glyph from [Tabler Icons](https://tabler.io/icons)

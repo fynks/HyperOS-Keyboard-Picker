@@ -19,10 +19,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   chooser. An enabled IME reported by the app but missing from
   `getEnabledInputMethodList()` on this ROM no longer blocks the flip: success is
   verified by re-reading `DEFAULT_INPUT_METHOD` after the command.
-- `scripts/test-ime-pair.sh` (host test for the IME mapping) and
-  `scripts/flip-test.sh` (on-device flip and long-press test).
 - A manual GitHub Actions release workflow (`release-manual.yml`) and cropped
-  release screenshots under `docs/release/`.
+  release screenshots in `docs/`.
 
 ### Changed
 - The tile is presentation and fallback only; the switch logic lives in
