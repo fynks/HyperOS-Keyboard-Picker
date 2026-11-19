@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- The Quick Settings tile now flips between this device's two keyboards —
+  SwiftKey Beta and Gboard — in one tap, instead of always opening the chooser.
+  The tile label shows the active keyboard, and long-pressing it opens the native
+  chooser. The launcher icon is unchanged.
+- The flip asks KernelSU for root once and uses it only to run `ime set`; if root
+  is denied or a configured keyboard is unavailable, the tile falls back to the
+  chooser. An enabled IME reported by the app but missing from
+  `getEnabledInputMethodList()` on this ROM no longer blocks the flip: success is
+  verified by re-reading `DEFAULT_INPUT_METHOD` after the command.
+- `scripts/test-ime-pair.sh` (host test for the IME mapping) and
+  `scripts/flip-test.sh` (on-device flip and long-press test).
+
+### Changed
+- The tile is presentation and fallback only; the switch logic lives in
+  `KeyboardFlip`, and the two IME ids in `ImeIds`.
+- README privacy wording now says no Android permissions are declared, and
+  documents the one-time KernelSU grant used only by the tile flip.
+
 ## [1.2.0] - 2026-10-17
 
 ### Fixed

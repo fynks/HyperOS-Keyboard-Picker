@@ -21,20 +21,24 @@ imm.showInputMethodPicker();
 
 - Opens Android's native keyboard chooser
 - Closes itself as soon as you dismiss the chooser
-- Adds an optional Quick Settings tile, so the chooser can be opened from the
-  shade without going to the home screen
+- Adds an optional Quick Settings tile that **flips between SwiftKey and Gboard
+  in one tap** — no chooser dialog — and shows which keyboard is currently active
 
-There are two ways in, and one implementation behind both:
+There are two ways in:
 
 - **Home-screen icon** — `MainActivity` calls
-  `InputMethodManager.showInputMethodPicker()` directly.
-- **Quick Settings tile** — `PickerTileService` does *not* touch the input method
-  API. Android's tile integration collapses the shade and launches that same
-  `MainActivity` via `startActivityAndCollapse`.
+  `InputMethodManager.showInputMethodPicker()` directly. This never needs root.
+- **Quick Settings tile** — tap to flip between the two keyboards configured for
+  this device (SwiftKey Beta and Gboard); long-press to open the native chooser.
+  The flip runs `su -c "ime set <id>"`, which needs KernelSU root granted once to
+  this app. If root is denied or a configured keyboard is unavailable, the tile
+  falls back to launching `MainActivity` and opens the chooser instead.
 
 ## What it does not do
 
-- It does not switch to a keyboard for you — the choice is always yours
+- The launcher icon does not switch keyboards for you — the choice is always yours.
+  The Quick Settings tile is the one exception: it toggles the two keyboards
+  configured for this device
 - It does not draw its own dialog or imitate the system one
 - It does not open Settings
 - It has no settings screen, no onboarding, no configuration
@@ -64,6 +68,13 @@ raising it without hardware to test on would risk the one behaviour that matters
 No runtime permissions are requested, because `showInputMethodPicker()` is
 public API. The Quick Settings tile uses a system permission described under
 [Privacy](#privacy).
+
+**The tile's one-tap flip is specific to this device.** It targets SwiftKey Beta
+(`com.touchtype.swiftkey.beta`) and Gboard
+(`com.google.android.inputmethod.latin`) by id, and needs KernelSU root granted
+to the app. The Google TTS voice IME is deliberately not a flip target. The
+chooser path — launcher icon and tile long-press — works on any supported
+device and needs no root.
 
 ## Install and use
 
@@ -194,6 +205,28 @@ chooser opens on the device you ran it on; it is not evidence about other device
 or Android versions. See the [compatibility table](#requirements-and-compatibility)
 for what has actually been exercised.
 
+**IME-pair logic** (host, no device needed):
+
+```bash
+scripts/test-ime-pair.sh
+```
+
+Compiles `ImeIds.java` with plain `javac` and checks the flip mapping with
+literal IME ids. No Android SDK or dependencies.
+
+**Tile flip test** (device-specific, needs the debug build):
+
+```bash
+scripts/flip-test.sh
+```
+
+Asserts that a tile tap switches SwiftKey ↔ Gboard, that a second tap switches
+back, and that a long-press opens the chooser. Prerequisites: one authorised
+device at 1080×2400, the app installed with the tile added to the shade,
+KernelSU root granted to the app, and both configured IMEs enabled. The script
+wakes the screen, waits for SystemUI to bind the tile, taps the first tile in
+the expanded shade, and restores the original IME on exit.
+
 CI builds every push and publishes tagged releases; see
 [`.github/workflows/android.yml`](.github/workflows/android.yml).
 
@@ -204,7 +237,9 @@ app/src/main/
 ├── AndroidManifest.xml
 ├── java/com/fynks/keyboardpicker/
 │   ├── MainActivity.java        # opens the chooser, owns the window lifecycle
-│   └── PickerTileService.java   # Quick Settings tile; launches MainActivity
+│   ├── PickerTileService.java   # Quick Settings tile; flips keyboards, falls back to MainActivity
+│   ├── KeyboardFlip.java        # reads the active IME, runs `su`, verifies the result
+│   └── ImeIds.java              # the two configured IME ids and the flip mapping
 └── res/
     ├── drawable/       # adaptive icon layers and the dedicated tile icon
     ├── layout/         # the opaque window the chooser attaches to
@@ -213,7 +248,9 @@ app/src/main/
     └── values-night/   # night icon palette
 scripts/
 ├── check-release-version.sh   # tag vs Gradle version vs APK metadata
-└── smoke-test.sh              # on-device functional check
+├── smoke-test.sh              # on-device functional check
+├── test-ime-pair.sh           # host test for the flip mapping
+└── flip-test.sh               # on-device tile flip + long-press check
 docs/                          # screenshot.png, icon-512.png
 ```
 
@@ -252,7 +289,7 @@ render unreliably, so the dots are circles instead.
 
 ## Privacy
 
-The app declares **no runtime permissions** and requests no network access,
+The app declares **no Android permissions** and requests no network access,
 contains no analytics, and stores no data. `android:allowBackup="false"` keeps it
 out of cloud backup as well. Checkable against the shipped APK:
 
@@ -264,6 +301,12 @@ The Quick Settings tile is gated by `android.permission.BIND_QUICK_SETTINGS_TILE
 declared on the service, which is how Android restricts tile binding. That is a
 signature-level system permission granted at install time; it is not a runtime
 permission and never produces a permission prompt.
+
+The tile's flip is the one elevated operation: it asks **KernelSU**, not Android,
+for root and uses it only to run `ime set`. Root is requested once, granted in
+the KernelSU Superuser list, and never used for anything else. Uninstalling and
+reinstalling the app drops that grant and it must be granted again. The chooser
+path never touches root.
 
 ## License
 
