@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.0] - 2026-11-19
+
 ### Added
 - The Quick Settings tile now flips between this device's two keyboards —
   SwiftKey Beta and Gboard — in one tap, instead of always opening the chooser.
@@ -19,12 +21,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   verified by re-reading `DEFAULT_INPUT_METHOD` after the command.
 - `scripts/test-ime-pair.sh` (host test for the IME mapping) and
   `scripts/flip-test.sh` (on-device flip and long-press test).
+- A manual GitHub Actions release workflow (`release-manual.yml`) and cropped
+  release screenshots under `docs/release/`.
 
 ### Changed
 - The tile is presentation and fallback only; the switch logic lives in
   `KeyboardFlip`, and the two IME ids in `ImeIds`.
 - README privacy wording now says no Android permissions are declared, and
   documents the one-time KernelSU grant used only by the tile flip.
+- `versionCode` 6 -> 7 and `versionName` 1.2.0 -> 2.0.0 for the new feature and
+  manual release path.
+
+### Verified
+- On Android 15 / HyperOS 2 (23129RAA4G), 1080x2400: the tile flips SwiftKey ->
+  Gboard -> SwiftKey on consecutive taps, and long-press opens the native chooser.
+- Fallback behaviour confirmed with root revoked, with the voice IME selected,
+  and with Gboard disabled: each opens the chooser and leaves the IME unchanged.
+- `scripts/smoke-test.sh 6` passed 6/6, confirming the launcher-icon chooser path
+  still works after the tile changes.
 
 ## [1.2.0] - 2026-10-17
 

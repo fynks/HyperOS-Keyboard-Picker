@@ -33,11 +33,10 @@ android {
         // than 36 - the chooser is the whole app, and 36 is not yet verified on
         // Android 16 hardware.
         targetSdk = 35
-        // v1.1.0 shipped with versionCode 5; versionName was left at 1.0.0 by
-        // mistake, so the APK disagreed with its own release tag. Corrected here.
-        // Keep versionCode in step with versionName - see RELEASING.md.
-        versionCode = 6
-        versionName = "1.2.0"
+        // Keep versionCode in step with versionName - see RELEASING.md. The check
+        // in scripts/check-release-version.sh rejects a tag that disagrees.
+        versionCode = 7
+        versionName = "2.0.0"
     }
 
     signingConfigs {

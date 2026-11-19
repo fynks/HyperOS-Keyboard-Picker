@@ -66,6 +66,24 @@ generates the SHA-256, and publishes the release with its notes.
 The workflow refuses to publish a tagged release that is not signed with the
 release key, because such an APK could never upgrade over the previous one.
 
+## Manual release
+
+The `Manual release` workflow publishes without pushing a tag. Use it when you
+want a release from the current `main` on demand:
+
+1. Bump `versionName` and `versionCode` in `app/build.gradle` and move everything
+   under `Unreleased` into a dated `CHANGELOG.md` section, as above.
+2. Commit and push to `main`.
+3. Run the workflow from the Actions tab (or `gh workflow run release-manual.yml
+   -R fynks/HyperOS-Keyboard-Picker -f version=2.0.0`), passing the exact
+   `versionName` **without** the leading `v`.
+4. Wait for the run and check that the release appears with four assets: the APK,
+   its SHA-256, and both screenshots.
+
+The workflow refuses to publish when the input disagrees with `versionName`, when
+the signing secrets are missing, or when a release with that tag already exists.
+It does not create a local tag; the release itself carries the `v` tag.
+
 ## After publishing
 
 7. **Verify the published assets**, not just the workflow log:
