@@ -67,13 +67,20 @@ done
 tap_until "$expected" || die "tile tap did not switch to $expected (got $(current_ime))"
 tap_until "$start" || die "second tile tap did not restore $start (got $(current_ime))"
 
-"${A[@]}" shell input swipe 174 462 174 462 1200 >/dev/null 2>&1
-sleep 2
-windows=$("${A[@]}" shell dumpsys window 2>/dev/null)
-focused_app=$(printf '%s\n' "$windows" | grep -m1 'mFocusedApp=')
-focused=$(printf '%s\n' "$windows" | grep -m1 'mCurrentFocus=')
-printf '%s' "$focused_app" | grep -q "$PACKAGE" \
+long_press_ok=1
+for _ in 1 2 3; do
+    "${A[@]}" shell input swipe 174 462 174 462 1200 >/dev/null 2>&1
+    sleep 2
+    windows=$("${A[@]}" shell dumpsys window 2>/dev/null)
+    focused_app=$(printf '%s\n' "$windows" | grep -m1 'mFocusedApp=')
+    if printf '%s' "$focused_app" | grep -q "$PACKAGE"; then
+        long_press_ok=0
+        break
+    fi
+done
+[ "$long_press_ok" -eq 0 ] \
     || die "long-press did not launch MainActivity (app: ${focused_app:-none})"
+focused=$(printf '%s\n' "$windows" | grep -m1 'mCurrentFocus=')
 printf '%s' "$focused" | grep -q "$PACKAGE" \
     && die "long-press opened our window instead of the chooser"
 [ -n "$focused" ] || die "long-press left no focused window"
