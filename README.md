@@ -80,7 +80,7 @@ device and needs no root.
 
 1. Download `app-release.apk` from the [Releases](../../releases) page, and install it.
 2. **From the home screen:** tap **Keyboard Picker**, pick a keyboard, and the appis gone.
-3. **From Quick Settings:** pull the shade down, tap the pencil/edit icon, find **Keyboard Picker**, and drag it into the tile area. Tapping it opens the same chooser and collapses the shade. To remove it later, edit the shade again and drag it back out.
+3. **From Quick Settings:** pull the shade down, tap the pencil/edit icon, find **Keyboard Picker**, and drag it into the tile area. Tapping the tile flips between SwiftKey and Gboard; long-pressing it opens the same chooser. To remove it later, edit the shade again and drag it back out.
 
 > Releases are signed with a long-lived key and upgrade cleanly over each other.
 > If you have a build installed that was signed with a *different* key (an early

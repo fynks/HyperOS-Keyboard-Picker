@@ -28,7 +28,7 @@ final class KeyboardFlip {
 
         Process process = null;
         try {
-            process = new ProcessBuilder("su", "-c", "ime set " + target)
+            process = new ProcessBuilder("/system/bin/su", "-c", "ime set " + target)
                     .redirectErrorStream(true)
                     .start();
             if (!process.waitFor(3, TimeUnit.SECONDS)) {
