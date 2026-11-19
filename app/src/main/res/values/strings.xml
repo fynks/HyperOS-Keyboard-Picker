@@ -3,4 +3,7 @@
     <string name="app_name">Keyboard Picker</string>
     <string name="opening_picker">Opening keyboard picker…</string>
     <string name="tile_label">Keyboard Picker</string>
+    <string name="tile_fallback_toast">Root unavailable — opening keyboard chooser</string>
+    <string name="tile_state_switch_to">Switch to %1$s</string>
+    <string name="tile_state_open_chooser">Open keyboard chooser</string>
 </resources>
